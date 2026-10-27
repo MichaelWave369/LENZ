@@ -1,0 +1,73 @@
+# LENZ — Game Bible (living v0.1)
+
+> **One world. Infinite perspectives.**
+
+## Origin and creative credit
+
+Shayne's dream-game pitch described an adventure that combines platforming, shooters, side-scrolling, mystery-thriller, survival horror, open-world exploration and isometric dungeon combat: *a new experience at every turn*. Shayne proposed the name **LENZ**. The idea to make **L.E.N.Z.** a sinister corporation emerged in the subsequent creative discussion.
+
+These influences describe genre expectations, not permission to reuse other games' copyrighted characters, assets, level designs or trademarks.
+
+## The two meanings of LENZ
+
+- **LENZ** is the player's mysterious optical interface and the name of the game.
+- **L.E.N.Z.** is the **Laboratory for Experiential Neurorealities and Zoning**, an immense corporation that monetized and weaponized synthetic experiences.
+- Its public promise: **"Reality is what we make it."**
+- Its hidden objective: observe adaptation, reaction and obedience across incompatible simulated realities.
+
+The facility experiments with **Experience Zones**, each with a distinct genre grammar. Something has caused the zones to bleed together. An object moved in one genre can alter a path in another. The protagonist discovers they may be a test subject, and the corporation may be trapped within its own experiment.
+
+**Core story question:** If perceptions can be rewritten, what remains true?
+
+## Non-negotiable gameplay principles
+
+1. **One persistent player.** Health, inventory, discoveries, choices and relationships persist across perspectives.
+2. **Diegetic transitions.** Switching mode should eventually have an understandable in-world cause, not feel like loading unrelated demos.
+3. **Each genre stands on its own.** Horror needs tension, platforming needs precise movement, RPG combat needs readable decisions, and mysteries require solvable clues.
+4. **A meaningful outside world.** The world should react to discoveries, including effects from seemingly small side missions.
+5. **No forced monetization or lock-in.** Save locally and support exports in later milestones.
+6. **VR must honor the player.** No forced camera rotations, unexpected acceleration, or physical-space assumptions.
+
+## Experience Zone design
+
+| Zone | Genre | Primary verbs | Story purpose |
+|---|---|---|---|
+| Z-01 Frontier | Open-world exploration | roam, scan, scavenge, speak | Introduce the world and first anomaly |
+| Z-02 Dead Sector | Survival horror | hide, survive, ration, investigate | Expose the human cost of the experiments |
+| Z-03 Underworld | Isometric combat | fight, equip, strategize | Reveal the reality engine's structure |
+| Z-04 The Fracture | Side-scrolling platforming | jump, time, navigate | Show spatial reality itself is editable |
+| Z-05 Blackout (planned) | First-person shooter | aim, flank, improvise | Confront corporate enforcement |
+| Z-06 The Forgotten (planned) | Detective mystery | examine, connect, deduce | Uncover the corporation's origin |
+| Z-07 Collapse (planned) | Open-world survival | craft, build, protect | Unite zones and survivor communities |
+
+### Example sequence
+
+The player explores an abandoned rural town in Frontier and finds a sealed hospital. Inside, the same physical location becomes Dead Sector horror. The basement projects an Underworld dungeon schematic. An unstable maintenance shaft transforms into a side-scrolling platform section. What the player recovers in each reality changes the original town.
+
+## First prototype's scope (v0.1)
+
+The root page implements **four small, visually distinct playable 2D scenes**, selectable with Q, numbered keys or on-screen controls. It persists health, recovered files, zone visitation and positions in localStorage. Exploration, an approaching horror enemy, dungeon attack and platforming are implemented as deliberately small mechanical sketches.
+
+The **XR Laboratory** is a separate native WebXR/WebGL proof of concept: a stationary room-scale scene displaying four different stylized 3D worlds, with controller trigger to switch reality. It does **not yet** implement the full desktop game's movement or combat in VR. Its value is proving immersive browser rendering and genre changes without camera coercion.
+
+### Story state and evidence
+
+Recover four prototype clues: the Frontier anomaly report, Dead Sector medical record, Underworld core and Fracture stability shard. Vitals and collected evidence travel between zones. The final state is a prototype narrative reveal, not the finished game's ending.
+
+### Player comfort
+
+The WebXR scene uses the headset's tracked view with no scripted locomotion or camera rotation. Later motion features must offer snap turn, teleport locomotion, seated/standing options, comfort vignette controls, height calibration and clear interaction affordances. Quest 3 testing is a target, **not a claim of certification**.
+
+## Accessibility and trust
+
+Keyboard controls and clickable alternative controls exist; on-screen directional controls appear on coarse-pointer displays. Motion and audio should not be required to understand critical information. No analytics, mandatory sign-in, external fonts, remote scripts or ads. Future design needs remappable controls, text size, subtitles, save export and a robust controller mapping.
+
+## Technology direction
+
+Start from a dependency-free, static browser foundation to minimize deployment complexity. Introduce larger tools only when a specific vertical slice proves the need. Evaluate Domistika, BTM, FrameFieldStudio, PhiOS XR and BackyardProductionCompany as **optional future integrations**. No unverified compatibility or shared runtime is assumed.
+
+## Tone and identity
+
+Unsettling corporate sci-fi, curiosity over shock, systemic surprises over random genre roulette. The antagonists see humans as data points; the game should make players feel like people whose decisions matter.
+
+*Status: concept and early prototype. Major plot, setting, character designs and final acronym remain editable creative decisions.*

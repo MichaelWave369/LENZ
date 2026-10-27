@@ -1,0 +1,21 @@
+name: LENZ CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/game.js
+          node --check src/xr.js
+      - name: Run dependency-free tests
+        run: node --test tests/*.test.mjs

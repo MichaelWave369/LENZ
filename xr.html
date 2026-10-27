@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111e">
+<title>LENZ // Immersive XR Laboratory</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#153e53,#080d17 65%);color:#ecf5ff;font-family:system-ui,Segoe UI,sans-serif;min-height:100vh}
+.wrap{max-width:1120px;margin:auto;padding:22px 20px 45px}header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+h1{font-size:clamp(40px,9vw,86px);letter-spacing:.2em;margin:15px 0 0;line-height:1}.micro{color:#62dce7;font:700 12px ui-monospace,monospace;letter-spacing:.15em}
+p{color:#b9cce0;line-height:1.6}a{color:#7fe1ea}a:focus-visible,button:focus-visible{outline:3px solid #ffc578;outline-offset:3px}
+.frame{border:1px solid #3b5a76;background:#101b2a;border-radius:13px;overflow:hidden;box-shadow:0 30px 90px #0008}
+.frame-head{display:flex;justify-content:space-between;padding:14px 17px;gap:15px;flex-wrap:wrap;border-bottom:1px solid #344a60;font:700 12px ui-monospace,monospace;letter-spacing:.12em;color:#7ee0e8}
+canvas{width:100%;aspect-ratio:16/9;display:block;background:#060d18}
+.buttons{display:flex;gap:10px;flex-wrap:wrap;padding:14px;background:#0d1827}
+button,.link{color:#dceefa;padding:12px 16px;border-radius:7px;border:1px solid #48677d;background:#152a40;font-weight:700;cursor:pointer;text-decoration:none;font:700 13px system-ui}
+button.primary{background:#78e4e9;border-color:#78e4e9;color:#06141b}button:disabled{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:17px}.tile{border:1px solid #314c65;border-radius:8px;padding:15px;background:#132033}.tile b{color:#7de2e6;font-size:12px;letter-spacing:.1em}.tile p{font-size:13px;margin-bottom:0}
+#status{margin-top:14px;min-height:1.6em;color:#a4c0d7;font:13px ui-monospace,monospace}
+@media(max-width:670px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+<div class="wrap">
+<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.1 // Stationary, immersive genre-shifting dioramas</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
+<section class="frame">
+ <div class="frame-head"><span id="zone">EXPERIENCE: FRONTIER</span><span>WEBXR IMMERSIVE-VR EXPERIMENT</span></div>
+ <canvas id="scene" width="960" height="540" aria-label="Animated low-poly WebGL preview of a LENZ portal and its reality zone"></canvas>
+ <div class="buttons">
+  <button class="primary" id="enter" disabled>CHECKING XR SUPPORT</button>
+  <button id="cycle">PREVIEW NEXT REALITY</button>
+  <a class="link" href="index.html">PLAY DESKTOP PROTOTYPE</a>
+ </div>
+</section>
+<div id="status" role="status" aria-live="polite">INITIALIZING GRAPHICS</div>
+<div class="grid">
+<div class="tile"><b>HEADSET REQUIREMENTS</b><p>Use a compatible headset browser (e.g., Quest Browser) over HTTPS, and grant immersive VR permission. A desktop WebGL preview works without a headset.</p></div>
+<div class="tile"><b>VR INTERACTION</b><p>Enter immersive mode, look around the physical-scale scene, and press either controller's trigger to switch realities. Use your headset's menu to exit VR.</p></div>
+<div class="tile"><b>COMFORT & SCOPE</b><p>No automatic camera movement, artificial locomotion, forced turning, flashing, or jumpscares. This is a small VR scene experiment, not yet the full playable game in VR.</p></div>
+</div>
+</div>
+<script type="module" src="src/xr.js"></script>
+</body></html>

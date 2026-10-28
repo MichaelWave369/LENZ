@@ -7,7 +7,7 @@
 
 ## Play the prototype
 
-Once GitHub Pages is enabled, the project's site should be available at:
+The GitHub Pages site is deployed at:
 
 **https://michaelwave369.github.io/LENZ/**
 
@@ -30,6 +30,12 @@ Open [XR Laboratory](xr.html) for the separate WebGL preview / native WebXR proo
 - On a compatible headset with an HTTPS context (target: **Meta Quest 3**), enter **immersive VR** and press a controller trigger to change zones.
 - This version uses a stationary tracking-based view; it intentionally has **no artificial VR locomotion**.
 - **Not a full VR port of the game yet.** Quest performance and support need hands-on verification.
+
+## Case 001: The first connected world (v0.2)
+
+The first genre-chain now has consequences: **Frontier's access code** unlocks **Dead Sector's archive**, whose **countercode** allows the **Underworld sentinel** to be defeated. Recover its **stabilizer core** to create the last platform in **The Fracture**. Retrieve the coordinates and return to **Frontier** to open a hidden L.E.N.Z. vault.
+
+The in-game **Case 001** panel tells you what to do next and which evidence is still missing. The corporate vault unlock is the final narrative objective after collecting four zone shards. Saved progress carries across the genres. The VR laboratory remains a separate visual and interaction experiment.
 
 ## Architecture
 

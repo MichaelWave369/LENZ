@@ -11,7 +11,18 @@
 - [x] Experimental native WebXR diorama scene and trigger-based lens change
 - [x] GitHub Actions syntax/smoke checks and Pages deployment workflow
 - [ ] Physical Quest 3 hands-on acceptance testing
-- [ ] GitHub Pages activated in repository Settings
+- [x] GitHub Pages deployed successfully
+
+## Milestone 1A: Causal chain vertical slice (v0.2)
+
+- [x] Cross-reality unlocks across four scenes
+- [x] Persistent clue ledger and sealed corporate vault
+- [x] Context-specific messages when objectives remain locked
+- [x] Automated state-transition/save continuity tests
+- [ ] Quest 3 headset playtesting of the existing XR lab
+- [ ] Real browser tests (canvas, clicks, keyboard, error-free reload)
+- [ ] Fully diegetic scene transitions, portals and shared geometry
+- [ ] Manual save import/export
 
 ## Milestone 1: Prove the genre transition
 

@@ -5,11 +5,27 @@ const W=1120,H=630,KEY='lenz-poc-v1';
 const IDS=['frontier','dead','underworld','fracture'];
 const NAMES={frontier:'FRONTIER',dead:'DEAD SECTOR',underworld:'UNDERWORLD',fracture:'THE FRACTURE'};
 const OBJECTIVES={
- frontier:'E: recover anomaly report near the cyan marker.',
- dead:'E: retrieve the corrupted medical record. Avoid the hunter.',
- underworld:'SPACE: fight the sentinel. E: recover the crystal.',
- fracture:'SPACE: jump across platforms. E: claim the shard.'
+ frontier:'E: read the anomaly report at the cyan terminal.',
+ dead:'E: recover medical records; Frontier report gives the access code.',
+ underworld:'SPACE: defeat the sentinel; Dead Sector reveals its weakness.',
+ fracture:'SPACE: jump. Underworld core stabilizes the last platform.'
 };
+const EVIDENCE=[
+ ['report','FRONTIER / ACCESS CODE'],
+ ['record','DEAD SECTOR / COUNTERCODE'],
+ ['crystal','UNDERWORLD / STABILIZER'],
+ ['platform','FRACTURE / VAULT COORDINATES']
+];
+function nextDirective(){
+ // Final-file state has priority over earlier steps (including imported or legacy saves).
+ if(has('vault'))return 'CASE CLOSED / You recovered the hidden L.E.N.Z. directive. This reality is not secure.';
+ if(!has('report'))return '01 / Scan the Frontier anomaly terminal to recover a medical access code.';
+ if(!has('record'))return '02 / In Dead Sector, use the access code to recover the medical file.';
+ if(!s.enemyDown)return '03 / The medical file exposes the Underworld sentinel. Approach and attack.';
+ if(!has('crystal'))return '04 / With the sentinel down, recover the Underworld stabilizer core.';
+ if(!has('platform'))return '05 / The core powers the Fracture bridge. Cross it and recover the coordinates.';
+ return '06 / Return to Frontier. The coordinates unlocked a sealed L.E.N.Z. vault.';
+}
 const defaults=()=>({
  zone:'frontier',health:100,flags:{},visited:['frontier'],
  positions:{frontier:{x:160,y:355},dead:{x:125,y:370},underworld:{x:1,y:6},fracture:{x:100,y:560,vy:0}},
@@ -20,7 +36,7 @@ function load(){
   const raw=JSON.parse(localStorage.getItem(KEY));if(!raw||!IDS.includes(raw.zone))return defaults();
   const d=defaults();
   d.zone=raw.zone;d.health=Math.max(1,Math.min(100,Number(raw.health)||100));
-  for(const id of ['report','record','crystal','platform'])if(raw.flags?.[id]===true)d.flags[id]=true;
+  for(const id of ['report','record','crystal','platform','vault'])if(raw.flags?.[id]===true)d.flags[id]=true;
   d.visited=IDS.filter(id=>raw.visited?.includes(id));if(!d.visited.includes(d.zone))d.visited.push(d.zone);
   d.enemyDown=raw.enemyDown===true;
   for(const id of IDS){const v=raw.positions?.[id];if(v&&Number.isFinite(v.x)&&Number.isFinite(v.y)){
@@ -49,6 +65,9 @@ function hud(){
  document.getElementById('shards').textContent=shardCount()+' / 4';
  document.getElementById('visited').textContent=s.visited.length+' / 4';
  document.getElementById('objective').textContent=OBJECTIVES[s.zone];
+ document.getElementById('caseStatus').textContent=nextDirective();
+ document.getElementById('caseEvidence').textContent=EVIDENCE.map(([id,label])=>(has(id)?'[RECOVERED] ':'[MISSING] ')+label).join(' | ');
+ document.getElementById('caseEnding').textContent=has('vault')?'EVIDENCE 005 // CORPORATE DIRECTIVE: "THE SUBJECT IS THE PRODUCT." Your escape is the next experiment.':'FINAL FILE // SEALED IN FRONTIER — FOUR ZONE CLUES REQUIRED';
  document.getElementById('signal').textContent=s.zone==='dead'?'SIGNAL: COMPROMISED':'SIGNAL: '+(shardCount()===4?'BREACHED':'STABLE');
  document.querySelectorAll('[data-zone]').forEach(b=>{
   const active=b.dataset.zone===s.zone;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
@@ -62,16 +81,29 @@ function shift(id){
 function next(){shift(IDS[(IDS.indexOf(s.zone)+1)%IDS.length])}
 function interact(){
  const a=p();
- if(s.zone==='frontier'&&dist(a,{x:738,y:292})<105)gain('report','ANOMALY REPORT: ZONES WERE NEVER MEANT TO CONNECT');
- else if(s.zone==='dead'&&dist(a,{x:887,y:204})<105)gain('record','MEDICAL RECORD: THE SUBJECTS ARE STILL INSIDE');
- else if(s.zone==='underworld'&&dist(a,{x:8,y:6})<2.2)gain('crystal','DUNGEON CORE: A NEW PERSPECTIVE UNLOCKED');
- else if(s.zone==='fracture'&&dist(a,{x:822,y:318})<100)gain('platform','STABILITY SHARD ACQUIRED: REALITY IS ARTIFICIAL');
- else say('NOTHING TO INTERACT WITH HERE',1.8);
+ if(s.zone==='frontier'&&dist(a,{x:738,y:292})<105){
+  gain('report','ACCESS CODE RECOVERED // DEAD SECTOR MEDICAL ARCHIVE UNLOCKED');
+ }else if(s.zone==='frontier'&&dist(a,{x:1009,y:336})<81){
+  if(!has('platform'))say('CORPORATE VAULT LOCKED // FIND FOUR ZONE CLUES',3);
+  else if(has('vault'))say('DIRECTIVE RETAINED // SUBJECT IS THE PRODUCT',4);
+  else{s.flags.vault=true;say('DIRECTIVE RECOVERED // SUBJECT IS THE PRODUCT',9);hud();save();}
+ }else if(s.zone==='dead'&&dist(a,{x:887,y:204})<105){
+  if(!has('report'))say('ACCESS DENIED // CODE STORED IN FRONTIER ANOMALY REPORT',4);
+  else gain('record','COUNTERCODE FOUND // THE UNDERWORLD SENTINEL IS VULNERABLE');
+ }else if(s.zone==='underworld'&&dist(a,{x:8,y:6})<2.2){
+  if(!s.enemyDown)say('CORE SHIELDED // DEFEAT THE SENTINEL FIRST',3);
+  else gain('crystal','CORE RECOVERED // THE FRACTURE BRIDGE NOW EXISTS');
+ }else if(s.zone==='fracture'&&dist(a,{x:822,y:318})<100){
+  if(!has('crystal'))say('PLATFORM UNSTABLE // RESTORE POWER FROM UNDERWORLD',4);
+  else gain('platform','VAULT COORDINATES FOUND // FRONTIER VAULT UNLOCKED');
+ }else say('NOTHING TO INTERACT WITH HERE',1.8);
 }
 function action(){
  const a=p();
  if(s.zone==='underworld'){
-  if(!s.enemyDown&&dist(a,{x:8,y:3})<2.4){s.enemyDown=true;say('SENTINEL DEFEATED // PERSISTENT ACROSS LENSES');save();}
+  if(s.enemyDown)say('SENTINEL ALREADY DEFEATED',1.5);
+  else if(!has('record'))say('SENTINEL IMMUNE // RECOVER DEAD SECTOR COUNTERCODE',3);
+  else if(dist(a,{x:8,y:3})<2.4){s.enemyDown=true;say('SENTINEL DEFEATED // CORE SHIELD DISABLED',5);hud();save();}
   else say('STRIKE MISSED: APPROACH THE SENTINEL',1.5);
  }else if(s.zone==='fracture'){
   if(a.grounded!==false||Math.abs(a.vy)<1){a.vy=-475;a.grounded=false;}
@@ -114,7 +146,8 @@ function update(dt,now){
  }else{
   const prevY=a.y;a.x=clamp(a.x+input.x*230*dt,20,1090);
   a.vy=clamp((a.vy||0)+980*dt,-550,900);a.y+=a.vy*dt;a.grounded=false;
-  const surfaces=[{x:0,y:560,w:1120},{x:205,y:485,w:170},{x:455,y:410,w:180},{x:725,y:350,w:190}];
+  const surfaces=[{x:0,y:560,w:1120},{x:205,y:485,w:170},{x:455,y:410,w:180}];
+  if(has('crystal'))surfaces.push({x:725,y:350,w:190});
   for(const pl of surfaces){if(a.x>=pl.x-12&&a.x<=pl.x+pl.w+12&&prevY<=pl.y+8&&a.y>=pl.y&&a.vy>=0){a.y=pl.y;a.vy=0;a.grounded=true;break}}
   if(a.y>675){a.x=100;a.y=560;a.vy=0;damage(8);say('FALL DETECTED // CHECKPOINT RESTORED',2);}
  }
@@ -139,7 +172,11 @@ function frontier(){
  const blocks=[[240,105,170,125],[520,80,130,175],[840,104,210,122],[360,430,140,115],[790,449,185,106]];
  blocks.forEach(([x,y,w,h],i)=>{rect(x+8,y+9,w,h,'#0b1921aa');rect(x,y,w,h,i%2?'#2b5866':'#314653');rect(x+15,y+15,w-30,6,'#71b3be44');rect(x+w/2-12,y+h-10,24,10,'#0e2434')});
  for(let i=0;i<13;i++){const x=(i*173+77)%W,y=(i*91+50)%H;if(y<275||y>415){circle(x,y,17,'#315a4d');circle(x+5,y-7,10,'#3a6d58')}}
- rect(970,290,82,94,'#123e50');text('EXIT',982,281,13,'#b5f8fc');text('L.E.N.Z.',470,34,18,'#7be8ea');
+ rect(970,290,82,94,has('platform')?'#136c72':'#123e50');
+ text(has('platform')?'VAULT':'SEALED',972,281,13,has('platform')?'#8af4ea':'#a6b8c7');
+ if(has('platform')&&!has('vault'))marker(1009,336,'E: OPEN');
+ if(has('vault')){rect(982,307,54,38,'#42c49b');text('OPEN',990,357,12,'#c4ffea');}
+ text('L.E.N.Z.',470,34,18,'#7be8ea');
  if(!has('report'))marker(738,292,'E: READ');else circle(738,292,11,'#297365');
  player(a.x,a.y);text('FRONTIER // FIELD SURVEY',26,93,18);text('Walk to the cyan terminal. Change reality with Q.',26,119,13,'#b1cfd8');
 }
@@ -149,7 +186,7 @@ function dead(){
   rect(x,y,w,h,'#3a3941');rect(x+6,y+5,Math.max(1,w-12),Math.max(1,h-10),'#282833');
  }
  for(let i=0;i<6;i++){rect(120+i*140,82,67,13,'#682e43');rect(135+i*140,95,27,5,'#f15d6a77')}
- marker(!has('record')?887:-400,204,'E: LOG');
+ marker(!has('record')?887:-400,204,has('report')?'E: LOG':'LOCKED');
  circle(enemy.x,enemy.y,22,'#b42a44');circle(enemy.x,enemy.y,10,'#f56a78');
  player(a.x,a.y);
  c.save();rect(0,0,W,H,'#030609e0');c.globalCompositeOperation='destination-out';
@@ -169,17 +206,19 @@ function underworld(){
  }
  const p1=iso(8,3),p2=iso(8,6),a=iso(p().x,p().y);
  if(!s.enemyDown){circle(p1.x,p1.y-8,19,'#79294e');text('SENTINEL',p1.x-42,p1.y-32,11,'#ff93ba')}
- if(!has('crystal'))marker(p2.x,p2.y-15,'E: CORE');
+ if(!has('crystal'))marker(p2.x,p2.y-15,s.enemyDown?'E: CORE':'SHIELDED');
  player(a.x,a.y-9);
  text('UNDERWORLD // FAULT-LINE DUNGEON',26,94,17);
  text('Approach sentinel and press SPACE. Recover the crystal.',26,121,13,'#b0bad7');
 }
 function fracture(){
  backdrop('#102537');for(let i=0;i<22;i++)circle((i*83+40)%1120,(i*71)%500+40,1+(i%3),'#67a9c9');
- for(const [x,y,w] of [[0,560,1120],[205,485,170],[455,410,180],[725,350,190]]){
+ for(const [x,y,w] of [[0,560,1120],[205,485,170],[455,410,180]]){
   rect(x,y,w,18,'#32a3be');rect(x,y+18,w,65,'#19394e');
   for(let i=x;i<x+w;i+=30)line(i,y+23,i+15,y+44,'#4bbbd04d',2);
  }
+ if(has('crystal')){rect(725,350,190,18,'#60e5cf');rect(725,368,190,65,'#214b5d');}
+ else{rect(725,350,190,7,'#2e546a');text('BRIDGE OFFLINE',734,330,13,'#ffac80');}
  for(let i=0;i<7;i++){const x=405+i*41;line(x,561,x+15,540,'#f74f6d',4);line(x+15,540,x+28,561,'#f74f6d',4)}
  const a=p();if(!has('platform'))marker(822,318,'E: SHARD');
  rect(1030,482,62,79,'#153e59');rect(1041,495,39,65,'#5bd9e477');
@@ -193,8 +232,10 @@ function draw(){
  // Quiet corporate monitoring aesthetic: intentionally non-flashing.
  rect(0,0,W,50,'#040e19b5');text('L.E.N.Z. // EXPERIENCE CONTROL',23,31,15,'#79e3ec');
  text('SUBJECT 001      VITALS '+Math.ceil(s.health)+'      DATA '+shardCount()+'/4',685,31,13,'#d7e6f5');
- if(shardCount()===4){
-  rect(260,530,630,57,'#031e2add');text('EXPERIMENT BREACHED // THE WORLD IS STILL HERE',285,564,17,'#77f3e9');
+ if(has('vault')){
+  rect(243,530,655,57,'#031e2add');text('CASE 001 COMPLETE // THE SUBJECT IS THE PRODUCT',265,564,16,'#77f3e9');
+ }else if(shardCount()===4){
+  rect(243,530,655,57,'#031e2add');text('RETURN TO FRONTIER // OPEN THE CORPORATE VAULT',267,564,16,'#77f3e9');
  }
 }
 document.querySelectorAll('[data-zone]').forEach(b=>b.addEventListener('click',()=>shift(b.dataset.zone)));

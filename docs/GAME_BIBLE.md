@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.1)
+# LENZ — Game Bible (living v0.2)
 
 > **One world. Infinite perspectives.**
 
@@ -43,6 +43,18 @@ The facility experiments with **Experience Zones**, each with a distinct genre g
 ### Example sequence
 
 The player explores an abandoned rural town in Frontier and finds a sealed hospital. Inside, the same physical location becomes Dead Sector horror. The basement projects an Underworld dungeon schematic. An unstable maintenance shaft transforms into a side-scrolling platform section. What the player recovers in each reality changes the original town.
+
+## Cross-reality consequence chain (v0.2)
+
+The first connected case has five real dependencies, not just flavor text:
+
+1. **Frontier:** Reading the anomaly report recovers a code that unlocks the Dead Sector archive.
+2. **Dead Sector:** The recovered medical record reveals the Underworld sentinel's weakness.
+3. **Underworld:** Defeat the sentinel with the countercode, then collect its shielded stabilizer core.
+4. **The Fracture:** The core enables the last raised platform and access to coordinates.
+5. **Frontier:** The coordinates unlock the corporate vault and a hidden directive: **"THE SUBJECT IS THE PRODUCT."**
+
+A persistent Case 001 panel shows the next objective, recovered evidence and final-file state. Blocked objectives explain the required prerequisite. The corporate directive is a final narrative flag, not an extra data shard. The separate WebXR dioramas do not yet contain these interactions.
 
 ## First prototype's scope (v0.1)
 

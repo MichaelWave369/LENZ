@@ -222,6 +222,17 @@ function init(){
  for(const [name,off] of [['aPos',0],['aNormal',12]]){
   const at=gl.getAttribLocation(program,name);gl.enableVertexAttribArray(at);gl.vertexAttribPointer(at,3,gl.FLOAT,false,24,off);
  }
+ // Render the canonical corporate directive inside the headset, not just on the HTML page.
+ // The original 5x7 letter geometry is static and drawn with one call per eye.
+ const textVertices=geometryForMessage(undefined,{pixel:.045,topY:2.61,z:-4.72,lineGap:.17});
+ messageBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,messageBuffer);
+ gl.bufferData(gl.ARRAY_BUFFER,textVertices,gl.STATIC_DRAW);messageVertexCount=textVertices.length/3;
+ const tv=compile(gl.VERTEX_SHADER,'attribute vec3 aGlyph;uniform mat4 uP;uniform mat4 uV;void main(){gl_Position=uP*uV*vec4(aGlyph,1.0);}');
+ const tf=compile(gl.FRAGMENT_SHADER,'precision mediump float;uniform vec3 uColor;void main(){gl_FragColor=vec4(uColor,1.0);}');
+ messageProgram=gl.createProgram();gl.attachShader(messageProgram,tv);gl.attachShader(messageProgram,tf);gl.linkProgram(messageProgram);
+ if(!gl.getProgramParameter(messageProgram,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(messageProgram));
+ messageUniforms={p:gl.getUniformLocation(messageProgram,'uP'),v:gl.getUniformLocation(messageProgram,'uV'),color:gl.getUniformLocation(messageProgram,'uColor'),pos:gl.getAttribLocation(messageProgram,'aGlyph')};
+ gl.bindBuffer(gl.ARRAY_BUFFER,cubeBuffer);
  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
 }
 function box(x,y,z,sx,sy,sz,color){
@@ -272,6 +283,20 @@ function scene(){
   // An interactable scan console, placed between the two portal openings.
   box(0,1.13,-5.06,.68,.45,.14,terminalHighlighted?C.pale:C.ice);
   box(0,1.53,-5.04,.46,.06,.15,C.gold);
+  // Farther into Frontier: a cipher pedestal and sealed corporate vault.
+  const saved=readXRSave(localStorage),finished=saved.flags?.vault===true;
+  const decrypted=vaultUnlocked(saved);
+  box(VAULT_DECODER.x,.65,VAULT_DECODER.z,.70,1.30,.64,C.stone);
+  box(VAULT_DECODER.x,VAULT_DECODER.y,VAULT_DECODER.z+.35,.64,.50,.16,
+   vaultTarget==='decoder'?C.pale:decrypted?C.green:C.gold);
+  drawDigit(VAULT_DECODER.x,1.87,VAULT_DECODER.z+.31,1,C.pale);
+  box(VAULT_DOOR.x,1.35,VAULT_DOOR.z,1.58,2.65,.30,
+   finished?C.green:decrypted?C.blue:C.dark);
+  box(VAULT_DOOR.x,2.76,VAULT_DOOR.z+.13,1.78,.12,.42,C.stone);
+  box(VAULT_DOOR.x,VAULT_DOOR.y,VAULT_DOOR.z+.18,.50,.50,.13,
+   vaultTarget==='door'?C.pale:finished?C.green:decrypted?C.ice:C.red);
+  drawDigit(VAULT_DOOR.x,3.05,VAULT_DOOR.z+.23,2,C.pale);
+  if(finished)box(0,1.94,-4.81,3.30,1.88,.14,C.dark);
  }else if(zone==='dead'){
   for(let i=0;i<5;i++){
    const z=-5.1-i*1.75;
@@ -337,6 +362,25 @@ function scene(){
 }
 function render(projection,view){
  gl.useProgram(program);gl.uniformMatrix4fv(loc.uP,false,projection);gl.uniformMatrix4fv(loc.uV,false,view);scene();
+ if(zone==='frontier'&&readXRSave(localStorage).flags?.vault===true)drawDirective(projection,view);
+}
+function drawDirective(projection,view){
+ if(!messageProgram||!messageBuffer||!messageVertexCount)return;
+ gl.useProgram(messageProgram);
+ gl.uniformMatrix4fv(messageUniforms.p,false,projection);
+ gl.uniformMatrix4fv(messageUniforms.v,false,view);
+ gl.uniform3fv(messageUniforms.color,[.48,.98,.91]);
+ gl.bindBuffer(gl.ARRAY_BUFFER,messageBuffer);
+ gl.enableVertexAttribArray(messageUniforms.pos);
+ gl.vertexAttribPointer(messageUniforms.pos,3,gl.FLOAT,false,12,0);
+ gl.drawArrays(gl.TRIANGLES,0,messageVertexCount);
+ // Restore the original cube layout for the next eye/frame.
+ gl.bindBuffer(gl.ARRAY_BUFFER,cubeBuffer);
+ for(const [name,offset] of [['aPos',0],['aNormal',12]]){
+  const attrib=gl.getAttribLocation(program,name);
+  gl.enableVertexAttribArray(attrib);gl.vertexAttribPointer(attrib,3,gl.FLOAT,false,24,offset);
+ }
+ gl.useProgram(program);
 }
 function perspective(fov,aspect,near,far){
  const f=1/Math.tan(fov/2),r=1/(near-far);

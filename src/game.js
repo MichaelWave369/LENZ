@@ -51,7 +51,7 @@ const SAVE_KIND='LENZ_CASE_SAVE';
 const SAVE_VERSION=1;
 const SAVE_LIMIT=131072;
 const defaults=()=>({
- zone:'frontier',health:100,flags:{},visited:['frontier'],portalCount:0,portalLog:[],
+ zone:'frontier',health:100,flags:{},visited:['frontier'],portalCount:0,portalLog:[],sentinelPhase:0,
  positions:{frontier:{x:160,y:355},dead:{x:125,y:370},underworld:{x:1,y:6},fracture:{x:100,y:560,vy:0}},
  enemyDown:false
 });
@@ -67,6 +67,9 @@ function normalizeState(raw){
  const visited=Array.isArray(raw.visited)?raw.visited:[];
  d.visited=IDS.filter(id=>visited.includes(id));if(!d.visited.includes(d.zone))d.visited.push(d.zone);
  d.enemyDown=raw.enemyDown===true;
+ const stage=Number(raw.sentinelPhase);
+ d.sentinelPhase=d.enemyDown?3:Number.isInteger(stage)&&stage>=0&&stage<=3?stage:0;
+ if(d.sentinelPhase===3)d.enemyDown=true;
  for(const id of IDS){
   const v=raw.positions?.[id],b=d.positions[id];
   if(v&&Number.isFinite(v.x)&&Number.isFinite(v.y)){
@@ -174,7 +177,7 @@ function action(){
  if(s.zone==='underworld'){
   if(s.enemyDown)say('SENTINEL ALREADY DEFEATED',1.5);
   else if(!has('record'))say('SENTINEL IMMUNE // RECOVER DEAD SECTOR COUNTERCODE',3);
-  else if(dist(a,{x:8,y:3})<2.4){s.enemyDown=true;say('SENTINEL DEFEATED // CORE SHIELD DISABLED',5);hud();save();}
+  else if(dist(a,{x:8,y:3})<2.4){s.enemyDown=true;s.sentinelPhase=3;say('SENTINEL DEFEATED // CORE SHIELD DISABLED',5);hud();save();}
   else say('STRIKE MISSED: APPROACH THE SENTINEL',1.5);
  }else if(s.zone==='fracture'){
   if(a.grounded!==false||Math.abs(a.vy)<1){a.vy=-475;a.grounded=false;}

@@ -2,11 +2,12 @@
 import {KEY,IDS,NAMES,ROUTES,GATE_CENTERS,currentZone,readXRSave,persistXRTravel,targetGate} from './xr-gates.js';
 import {TERMINAL,raySphere,floorTarget,scanFrontierReport,teleportOffset} from './xr-play.js';
 import {DEAD_BREAKER,DEAD_ARCHIVE,deadPowerOnline,restoreDeadPower,retrieveMedicalArchive} from './xr-dead.js';
+import {CONDUITS,CORE,PULSE_ORDER,phaseOf,activeConduit,pulseConduit,recoverDungeonCore} from './xr-underworld.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
-const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),label=document.getElementById('zone');
+const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),coreButton=document.getElementById('underworldCore'),conduitButtons=[0,1,2].map(i=>document.getElementById('sentinelNode'+i)),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
 let zone=currentZone(readXRSave(localStorage)),session=null,referenceSpace=null,program,loc={},cubeBuffer;
-let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null;
+let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null,sentinelTarget=-1,coreTarget=false,lastPulseMs=-Infinity;
 function updateLabel(){
  label.textContent='EXPERIENCE: '+NAMES[zone];
  const routes=ROUTES[zone];
@@ -20,6 +21,18 @@ function updateLabel(){
  archiveButton.disabled=zone!=='dead'||flags.record===true;
  powerButton.textContent=deadPowerOnline(save)?'HOSPITAL POWER ONLINE':'RESTORE HOSPITAL POWER';
  archiveButton.textContent=flags.record===true?'MEDICAL FILE RECOVERED':'READ MEDICAL ARCHIVE';
+ const stage=phaseOf(save),active=activeConduit(save);
+ conduitButtons.forEach((button,i)=>{
+  button.disabled=zone!=='underworld'||save.enemyDown===true;
+  button.textContent='PULSE '+['LEFT','CENTER','RIGHT'][i]+' / '+(i+1);
+  button.classList.toggle('active-node',zone==='underworld'&&i===active&&flags.record===true);
+ });
+ coreButton.disabled=zone!=='underworld'||flags.crystal===true;
+ coreButton.textContent=flags.crystal===true?'STABILIZER RECOVERED':'RECOVER STABILIZER CORE';
+ document.getElementById('sentinelStatus').textContent=zone!=='underworld'?'UNDERWORLD ENCOUNTER AVAILABLE AFTER PORTAL CROSSING':
+  save.enemyDown===true?'SENTINEL DISABLED // SCAN THE CORE':
+  flags.record!==true?'SENTINEL IMMUNE // RECOVER DEAD SECTOR MEDICAL COUNTERCODE':
+  'SHIELD PHASE '+stage+'/3 // AIM AT '+['LEFT','CENTER','RIGHT'][active]+' CONDUIT';
  const found=['report','record','crystal','platform'].filter(k=>flags[k]===true).length;
  document.getElementById('caseState').textContent='SHARDS '+found+'/4 · '+(flags.vault===true?'CASE 001 COMPLETE':'CORPORATE VAULT SEALED')+' · '+(save.portalCount||0)+' GATE CROSSINGS';
  document.getElementById('xrJournal').textContent=(save.portalLog||[]).slice(-5).reverse().join(' · ')||'NO THRESHOLDS RECORDED';
@@ -48,11 +61,29 @@ function restorePower(){return changeDeadState(restoreDeadPower)}
 function readArchive(){return changeDeadState(retrieveMedicalArchive)}
 powerButton.addEventListener('click',restorePower);
 archiveButton.addEventListener('click',readArchive);
+function updateUnderworld(operation){
+ try{
+  const previous={...readXRSave(localStorage),zone};
+  const result=operation(previous);
+  if(result.changed)localStorage.setItem(KEY,JSON.stringify(result.state));
+  updateLabel();status.textContent=result.reason;
+  return result.changed;
+ }catch(err){status.textContent='SENTINEL ERROR // '+String(err?.message||err).slice(0,110);return false}
+}
+function pulseSentinel(index){
+ const now=performance.now();
+ if(now-lastPulseMs<500||zone!=='underworld')return false;
+ lastPulseMs=now;
+ return updateUnderworld(s=>pulseConduit(s,index));
+}
+function takeCore(){return updateUnderworld(recoverDungeonCore)}
+conduitButtons.forEach((b,i)=>b.addEventListener('click',()=>pulseSentinel(i)));
+coreButton.addEventListener('click',takeCore);
 function traverse(index){
  try{
   const state=persistXRTravel(localStorage,zone,index);
   if(!state)return false;
-  zone=currentZone(state);highlightedGate=-1;deadTarget=null;updateLabel();
+  zone=currentZone(state);highlightedGate=-1;deadTarget=null;sentinelTarget=-1;coreTarget=false;updateLabel();
   return true;
  }catch(err){
   status.textContent='SAVE ERROR // '+String(err?.message||err).slice(0,120);return false;
@@ -73,9 +104,15 @@ function changeZone(event){
   if(raySphere(origin,orientation,DEAD_BREAKER)!==null)return restorePower();
   if(raySphere(origin,orientation,DEAD_ARCHIVE)!==null)return readArchive();
  }
+ if(zone==='underworld'){
+  for(let i=0;i<CONDUITS.length;i++){
+   if(raySphere(origin,orientation,CONDUITS[i])!==null)return pulseSentinel(i);
+  }
+  if(raySphere(origin,orientation,CORE)!==null)return takeCore();
+ }
  const floor=floorTarget(origin,orientation);
  if(floor)return teleportTo(floor,frame);
- status.textContent='AIM AT A GATE, A ZONE CONSOLE, OR THE FLOOR';
+ status.textContent='AIM AT A PORTAL, A TARGETABLE OBJECT, OR THE FLOOR';
  return false;
 }
 function teleportTo(target,frame){
@@ -88,7 +125,7 @@ function teleportTo(target,frame){
  }
  try{
   referenceSpace=referenceSpace.getOffsetReferenceSpace(new XRRigidTransform(delta));
-  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;
+  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;
   status.textContent='TELEPORT COMPLETE // AIM AT GATE, TERMINAL OR FLOOR';
   return true;
  }catch(err){status.textContent='TELEPORT FAILED // '+String(err?.message||err).slice(0,90);return false}
@@ -192,8 +229,19 @@ function scene(){
   box(0,.67,-6.3,5.3,.27,5.3,C.stone);
   for(let x=0;x<5;x++)for(let z=0;z<5;z++)
    box((x-2)*.94,.85,-6.3+(z-2)*.94,.87,.09,.87,(x+z)%2?C.purple:C.blue);
-  box(0,1.24,-6.3,.55,.75,.55,C.gold);
-  box(1.1,1.27,-7.15,.5,.82,.5,C.red);
+  const saved=readXRSave(localStorage),down=saved.enemyDown===true;
+  box(0,1.18,-6.35,.68,1.26,.54,down?C.stone:C.purple);
+  box(0,1.94,-6.35,.52,.28,.55,down?C.stone:C.red);
+  for(let i=0;i<CONDUITS.length;i++){
+   const node=CONDUITS[i],expected=activeConduit(saved);
+   const completed=down||PULSE_ORDER.slice(0,phaseOf(saved)).includes(i);
+   const color=completed?C.stone:i===sentinelTarget?C.pale:i===expected?C.gold:C.red;
+   box(node.x,node.y,node.z,.42,.42,.24,color);
+   drawDigit(node.x,node.y+.36,node.z+.06,i+1,color);
+  }
+  // The stabilizer is still shielded until the final tactical pulse.
+  box(CORE.x,CORE.y,CORE.z,.53,.54,.53,coreTarget?C.pale:down?C.ice:C.dark);
+  box(CORE.x,CORE.y+.46,CORE.z,.38,.12,.38,down?C.green:C.red);
  }else{
   const platforms=[[0,-5.3],[-1.3,-6.6],[.4,-7.9],[1.6,-9.2],[-.9,-10.5]];
   platforms.forEach(([x,z],i)=>box(x,.25+i*.35,z,1.6,.23,.95,i%2?C.gold:C.blue));
@@ -235,7 +283,7 @@ function preview(){
 function immersiveFrame(time,frame){
  if(!session)return;session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
- highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;
+ highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;
  for(const source of session.inputSources||[]){
   const ray=frame.getPose(source.targetRaySpace,referenceSpace);
   if(!ray)continue;
@@ -245,6 +293,11 @@ function immersiveFrame(time,frame){
   if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null){terminalHighlighted=true;break}
   if(zone==='dead'&&raySphere(origin,orientation,DEAD_BREAKER)!==null){deadTarget='breaker';break}
   if(zone==='dead'&&raySphere(origin,orientation,DEAD_ARCHIVE)!==null){deadTarget='archive';break}
+  if(zone==='underworld'){
+   for(let i=0;i<CONDUITS.length;i++)if(raySphere(origin,orientation,CONDUITS[i])!==null){sentinelTarget=i;break}
+   if(sentinelTarget!==-1)break;
+   if(raySphere(origin,orientation,CORE)!==null){coreTarget=true;break}
+  }
   teleportPreview=floorTarget(origin,orientation);
   if(teleportPreview)break;
  }
@@ -260,7 +313,7 @@ async function enterXR(){
   enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
-   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
+   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
   xr.updateRenderState({baseLayer:new XRWebGLLayer(xr,gl,{alpha:false,depth:true})});
@@ -275,7 +328,7 @@ async function enterXR(){
 enter.addEventListener('click',enterXR);
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
- enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;
+ enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;coreButton.disabled=true;conduitButtons.forEach(b=>b.disabled=true);
 }else{
  try{init();requestAnimationFrame(preview);updateLabel();
   if(navigator.xr){

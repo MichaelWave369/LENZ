@@ -16,10 +16,11 @@ button.primary{background:#78e4e9;border-color:#78e4e9;color:#06141b}button:disa
 #status{margin-top:14px;min-height:1.6em;color:#a4c0d7;font:13px ui-monospace,monospace}
 .case{border:1px solid #33556a;border-radius:9px;padding:14px;margin-top:14px;background:#102034}
 .case p{margin:5px 0;color:#b5c8d7;font-size:13px;overflow-wrap:anywhere}
+button.active-node{border-color:#ffc578;background:#524225;color:#fff2d8}
 @media(max-width:670px){.grid{grid-template-columns:1fr}}
 </style></head><body>
 <div class="wrap">
-<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.6 // Frontier access code → Dead Sector power puzzle</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
+<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.7 // Underworld three-conduit sentinel encounter</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
 <section class="frame">
  <div class="frame-head"><span id="zone">EXPERIENCE: FRONTIER</span><span>WEBXR IMMERSIVE-VR EXPERIMENT</span></div>
  <canvas id="scene" width="960" height="540" aria-label="3D LENZ world preview with two distinctly numbered portal gates. Their destinations and site names are shown directly below."></canvas>
@@ -30,19 +31,28 @@ button.primary{background:#78e4e9;border-color:#78e4e9;color:#06141b}button:disa
   <button id="scanTerminal">SCAN FRONTIER TERMINAL</button>
   <button id="deadPower">RESTORE HOSPITAL POWER</button>
   <button id="deadArchive">READ MEDICAL ARCHIVE</button>
+  <button id="sentinelNode0">PULSE LEFT / 1</button>
+  <button id="sentinelNode1">PULSE CENTER / 2</button>
+  <button id="sentinelNode2">PULSE RIGHT / 3</button>
+  <button id="underworldCore">RECOVER STABILIZER CORE</button>
   <a class="link" href="index.html">PLAY DESKTOP PROTOTYPE</a>
  </div>
 </section>
 <div id="status" role="status" aria-live="polite">INITIALIZING GRAPHICS</div>
+<div class="case" aria-labelledby="sentinelTitle">
+ <b class="micro" id="sentinelTitle">UNDERWORLD // SENTINEL ENCOUNTER</b>
+ <p id="sentinelStatus" role="status" aria-live="polite">LOADING SENTINEL STATE</p>
+ <p>Once you recover the hospital medical countercode, disable the sentinel's shield conduits in sequence: <b>center (2), left (1), right (3)</b>. Wrong choices cost 4 vitals. Recover the exposed core after the third correct pulse.</p>
+</div>
 <div class="case">
  <b id="caseState" class="micro">LOADING CASE 001</b>
  <p id="xrJournal" aria-live="polite">LOADING PORTAL JOURNAL</p>
- <p>CASE 001 now has two linked XR objectives. Scan Frontier's cyan terminal for the access code. Cross the Hospital gate into Dead Sector. Find the <b>red breaker (1)</b> and restore power, then access the <b>medical archive (2)</b> to recover the sentinel countercode. Your health, evidence and gate crossings persist on this browser profile.</p>
+ <p>CASE 001 connects three XR scenes: scan Frontier's access-code terminal; restore Dead Sector power and recover its medical countercode; then enter Underworld, disable three sentinel shield conduits and claim the stabilizer core. Your progress persists in this browser profile.</p>
 </div>
 <div class="grid">
 <div class="tile"><b>HEADSET REQUIREMENTS</b><p>Use a compatible HTTPS headset browser, such as Quest Browser, and allow immersive VR. The desktop WebGL preview can traverse portals and scan the Frontier terminal using page buttons, but cannot simulate headset teleport targeting.</p></div>
-<div class="tile"><b>VR INTERACTION</b><p>Controller trigger activates the portal, console, or floor under your ray. Frontier has a glowing access-code scanner. Dead Sector has two separate devices: breaker <b>1</b> and archive <b>2</b>. Target them in that order after recovering the code. Desktop fallback buttons are also provided.</p></div>
-<div class="tile"><b>COMFORT & SCOPE</b><p>The horror is atmospheric, with steady lighting and no jump scares. Teleport remains discrete and bounded. Keep within your real guardian boundary. There is no VR collision system, moving hunter, combat, climbing or full campaign yet. Stop if uncomfortable.</p></div>
+<div class="tile"><b>VR INTERACTION</b><p>Aim at the numbered sentinel conduits, then trigger to fire a deliberate shield pulse. The highlighted active conduit is golden; completed conduits turn dim. Three hits in the correct order disable the sentinel. Aim at the exposed core to collect it. Desktop buttons reproduce the sequence without a headset.</p></div>
+<div class="tile"><b>COMFORT & SCOPE</b><p>No moving opponent, projectile effects, forced camera motion or flashing. Aim at the floor to teleport between stable positions. Mistakes cost in-game vitals only. Teleport remains discrete and bounded. Stay within your real play boundary; physical collisions, free-roaming enemies and the full VR campaign are not yet implemented.</p></div>
 </div>
 </div>
 <script type="module" src="src/xr.js"></script>

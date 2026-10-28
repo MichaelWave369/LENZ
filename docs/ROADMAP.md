@@ -57,6 +57,19 @@
 - [ ] Physical VR locomotion, interactions and gameplay (not claimed as implemented)
 - [ ] VR/2D multi-device sync beyond manual JSON import/export
 
+## Milestone 1D: First XR play objective (v0.5)
+
+- [x] Frontier evidence console with VR ray interaction
+- [x] Recover the actual Case 001 report in the shared save
+- [x] Bounded floor ray teleport target and stable in-world target marker
+- [x] XR reference-space offset motion, no forced rotation or continuous acceleration
+- [x] Gate, evidence, floor target priority for trigger input
+- [x] Desktop button fallback for terminal interaction
+- [x] Node tests for target geometry, update rules, locomotion math and legacy clues
+- [ ] Physically test controller target ray and teleport on Quest 3
+- [ ] Real collision, safe movement affordances and player options (snap turn, height)
+- [ ] Additional fully 3D Case 001 puzzles and meaningful enemy encounters
+
 ## Milestone 2: Expand immersive play
 
 - Quest 3 WebXR input mappings with hand/controller selection

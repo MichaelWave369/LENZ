@@ -23,6 +23,7 @@ jobs:
           node-version: '22'
       - run: |
           node --check src/game.js
+          node --check src/xr-play.js
           node --check src/xr-gates.js
           node --check src/xr.js
           node --test tests/*.test.mjs

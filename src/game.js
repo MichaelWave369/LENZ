@@ -17,13 +17,14 @@ const EVIDENCE=[
  ['platform','FRACTURE / VAULT COORDINATES']
 ];
 function nextDirective(){
+ // Final-file state has priority over earlier steps (including imported or legacy saves).
+ if(has('vault'))return 'CASE CLOSED / You recovered the hidden L.E.N.Z. directive. This reality is not secure.';
  if(!has('report'))return '01 / Scan the Frontier anomaly terminal to recover a medical access code.';
  if(!has('record'))return '02 / In Dead Sector, use the access code to recover the medical file.';
  if(!s.enemyDown)return '03 / The medical file exposes the Underworld sentinel. Approach and attack.';
  if(!has('crystal'))return '04 / With the sentinel down, recover the Underworld stabilizer core.';
  if(!has('platform'))return '05 / The core powers the Fracture bridge. Cross it and recover the coordinates.';
- if(!has('vault'))return '06 / Return to Frontier. The coordinates unlocked a sealed L.E.N.Z. vault.';
- return 'CASE CLOSED / You recovered the hidden L.E.N.Z. directive. This reality is not secure.';
+ return '06 / Return to Frontier. The coordinates unlocked a sealed L.E.N.Z. vault.';
 }
 const defaults=()=>({
  zone:'frontier',health:100,flags:{},visited:['frontier'],

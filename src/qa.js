@@ -1,5 +1,5 @@
 // Browser-only LENZ acceptance dashboard: manual outcomes, read-only case evidence.
-// No fetch(), external analytics, background submissions, or changes to GAME_KEY.
+// No outbound requests, analytics, background submissions or mutations of the game save.
 import {QA_KEY,XR_METRICS_KEY,QA_STEPS,QA_STATUSES,normalizeQA,qaCounts,gameSnapshot,safeEnvironment,safeXRMetrics,buildReport,readJSON,GAME_KEY} from './qa-core.js';
 
 const $=id=>document.getElementById(id);

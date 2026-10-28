@@ -229,8 +229,19 @@ function scene(){
   box(0,.67,-6.3,5.3,.27,5.3,C.stone);
   for(let x=0;x<5;x++)for(let z=0;z<5;z++)
    box((x-2)*.94,.85,-6.3+(z-2)*.94,.87,.09,.87,(x+z)%2?C.purple:C.blue);
-  box(0,1.24,-6.3,.55,.75,.55,C.gold);
-  box(1.1,1.27,-7.15,.5,.82,.5,C.red);
+  const saved=readXRSave(localStorage),down=saved.enemyDown===true;
+  box(0,1.18,-6.35,.68,1.26,.54,down?C.stone:C.purple);
+  box(0,1.94,-6.35,.52,.28,.55,down?C.stone:C.red);
+  for(let i=0;i<CONDUITS.length;i++){
+   const node=CONDUITS[i],expected=activeConduit(saved);
+   const completed=down||PULSE_ORDER.slice(0,phaseOf(saved)).includes(i);
+   const color=completed?C.stone:i===sentinelTarget?C.pale:i===expected?C.gold:C.red;
+   box(node.x,node.y,node.z,.42,.42,.24,color);
+   drawDigit(node.x,node.y+.36,node.z+.06,i+1,color);
+  }
+  // The stabilizer is still shielded until the final tactical pulse.
+  box(CORE.x,CORE.y,CORE.z,.53,.54,.53,coreTarget?C.pale:down?C.ice:C.dark);
+  box(CORE.x,CORE.y+.46,CORE.z,.38,.12,.38,down?C.green:C.red);
  }else{
   const platforms=[[0,-5.3],[-1.3,-6.6],[.4,-7.9],[1.6,-9.2],[-.9,-10.5]];
   platforms.forEach(([x,z],i)=>box(x,.25+i*.35,z,1.6,.23,.95,i%2?C.gold:C.blue));
@@ -272,7 +283,7 @@ function preview(){
 function immersiveFrame(time,frame){
  if(!session)return;session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
- highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;
+ highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;
  for(const source of session.inputSources||[]){
   const ray=frame.getPose(source.targetRaySpace,referenceSpace);
   if(!ray)continue;
@@ -282,6 +293,11 @@ function immersiveFrame(time,frame){
   if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null){terminalHighlighted=true;break}
   if(zone==='dead'&&raySphere(origin,orientation,DEAD_BREAKER)!==null){deadTarget='breaker';break}
   if(zone==='dead'&&raySphere(origin,orientation,DEAD_ARCHIVE)!==null){deadTarget='archive';break}
+  if(zone==='underworld'){
+   for(let i=0;i<CONDUITS.length;i++)if(raySphere(origin,orientation,CONDUITS[i])!==null){sentinelTarget=i;break}
+   if(sentinelTarget!==-1)break;
+   if(raySphere(origin,orientation,CORE)!==null){coreTarget=true;break}
+  }
   teleportPreview=floorTarget(origin,orientation);
   if(teleportPreview)break;
  }
@@ -297,7 +313,7 @@ async function enterXR(){
   enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
-   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
+   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
   xr.updateRenderState({baseLayer:new XRWebGLLayer(xr,gl,{alpha:false,depth:true})});
@@ -312,7 +328,7 @@ async function enterXR(){
 enter.addEventListener('click',enterXR);
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
- enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;
+ enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;coreButton.disabled=true;conduitButtons.forEach(b=>b.disabled=true);
 }else{
  try{init();requestAnimationFrame(preview);updateLabel();
   if(navigator.xr){

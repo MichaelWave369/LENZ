@@ -62,8 +62,9 @@ function normalizeState(raw){
  const health=Number(raw.health);
  d.health=Number.isFinite(health)?clamp(health,1,100):100;
  const flags=raw.flags&&typeof raw.flags==='object'&&!Array.isArray(raw.flags)?raw.flags:{};
- for(const id of ['report','record','crystal','platform','vault','deadPower'])if(flags[id]===true)d.flags[id]=true;
+ for(const id of ['report','record','crystal','platform','vault','vaultAccess','deadPower'])if(flags[id]===true)d.flags[id]=true;
  if(d.flags.record===true)d.flags.deadPower=true; // Legacy archives imply restored power.
+ if(d.flags.vault===true)d.flags.vaultAccess=true; // A completed 2D case implies the XR cipher was bypassed.
  const visited=Array.isArray(raw.visited)?raw.visited:[];
  d.visited=IDS.filter(id=>visited.includes(id));if(!d.visited.includes(d.zone))d.visited.push(d.zone);
  d.enemyDown=raw.enemyDown===true;
@@ -164,7 +165,7 @@ function interact(){
  }else if(s.zone==='frontier'&&dist(a,{x:1009,y:336})<81){
   if(!has('platform'))say('CORPORATE VAULT LOCKED // FIND FOUR ZONE CLUES',3);
   else if(has('vault'))say('DIRECTIVE RETAINED // SUBJECT IS THE PRODUCT',4);
-  else{s.flags.vault=true;say('DIRECTIVE RECOVERED // SUBJECT IS THE PRODUCT',9);hud();save();}
+  else{s.flags.vaultAccess=true;s.flags.vault=true;say('DIRECTIVE RECOVERED // SUBJECT IS THE PRODUCT',9);hud();save();}
  }else if(s.zone==='dead'&&dist(a,{x:887,y:204})<105){
   if(!has('report'))say('ACCESS DENIED // CODE STORED IN FRONTIER ANOMALY REPORT',4);
   else{ s.flags.deadPower=true;gain('record','COUNTERCODE FOUND // THE UNDERWORLD SENTINEL IS VULNERABLE'); }

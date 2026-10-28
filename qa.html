@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09111e">
+<title>LENZ // Field Test Lab</title>
+<meta name="description" content="Local-only LENZ Case 001 Quest 3 playtest checklist and bug-report exporter.">
+<style>
+:root{color-scheme:dark;--bg:#07101b;--panel:#102030;--line:#30495f;--ink:#e8f4fe;--muted:#a5bbcd;--cyan:#76e7ed;--amber:#ffc578}
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(ellipse at 80% 0%,#17465d 0%,transparent 40%),var(--bg);color:var(--ink)}
+.wrap{width:min(1130px,95vw);margin:auto;padding:27px 0 55px}
+h1{font-size:clamp(37px,7vw,72px);letter-spacing:.13em;line-height:1.02;margin:14px 0 8px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.12em;margin:0 0 10px;color:var(--cyan)}
+p{color:var(--muted)}small{color:var(--muted)}
+.micro{font:700 12px ui-monospace,monospace;letter-spacing:.15em;color:var(--cyan)}
+nav{display:flex;flex-wrap:wrap;gap:9px;margin:22px 0}
+a,button{font:700 13px system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);border:1px solid #55728b;border-radius:7px;padding:11px 14px;text-decoration:none;background:#172c3f;cursor:pointer}
+a:hover,button:hover{filter:brightness(1.14)}a:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+button.primary{background:var(--cyan);color:#07202b;border-color:var(--cyan)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.card{border:1px solid var(--line);border-radius:11px;background:#101d2e;padding:19px;margin-top:13px}
+.stat{font-size:27px;font-weight:900;color:var(--ink)}.subtle{font-size:12px;color:var(--muted)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13px;margin:0}dt{color:#b6c6d7}dd{margin:0;font:700 13px ui-monospace,monospace;text-align:right}
+.options{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+select,textarea{background:#0b1827;color:var(--ink);border:1px solid #4b657b;border-radius:6px;padding:10px;font:inherit}
+textarea{width:100%;resize:vertical;min-height:64px;margin-top:10px;font-size:13px}
+select{max-width:100%}.list{display:grid;gap:11px}
+.step{border:1px solid #2f4d63;border-radius:9px;padding:14px;background:#102335}
+.step-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.step-title{margin:0 0 5px;font-size:15px}.step p{font-size:13px;margin:0;color:#aebfd0;max-width:780px}
+code{color:var(--cyan);background:#071522;padding:2px 4px;border-radius:3px}
+#feedback{min-height:1.6em;color:var(--cyan);font:12px ui-monospace,monospace}
+.notice{border-left:3px solid var(--cyan);padding:11px 15px;background:#0a2432;color:#c2e0ef;margin:14px 0}
+footer{margin-top:25px;color:#90a9bd;font-size:12px}
+@media(max-width:750px){.grid{grid-template-columns:1fr}.step-head{display:block}.step-head select{margin-top:10px;width:100%}}
+</style></head><body><main class="wrap">
+<div class="micro">ENTER THE FIELD // QUALITY & REALITY ASSURANCE</div>
+<h1>LENZ<span style="color:var(--cyan)">.</span> FIELD TEST</h1>
+<p>Case 001 playtest protocol v0.10. Designed for Quest 3 and desktop testing. This lab reads progress from your local LENZ save but keeps your manual test answers separate.</p>
+<nav aria-label="Playtest navigation">
+<a href="index.html">PLAY BROWSER GAME</a>
+<a href="xr.html">ENTER XR LAB</a>
+<a href="https://github.com/MichaelWave369/LENZ/issues">VIEW GITHUB ISSUES</a>
+</nav>
+<div class="notice">No analytics, automatic uploads, identity capture or network report submission. The report is downloaded only when you press <b>Export Report</b>. Review free-text notes before sharing them. Gameplay flags are indicators, <b>not proof</b> that an objective works on a physical headset.</div>
+<div class="grid">
+<section class="card"><h2>Manual test progress</h2><div id="progress" class="stat" aria-live="polite">0 / 12 passed</div><div id="failures" class="subtle">0 failures · 0 blocked · 12 untested</div></section>
+<section class="card"><h2>Browser capability checks</h2><dl><dt>Secure context</dt><dd id="secure">Checking</dd><dt>WebGL</dt><dd id="webgl">Checking</dd><dt>Immersive VR support</dt><dd id="immersive">Checking</dd></dl><p class="subtle">Capability checks do not confirm good controller tracking or frame rate.</p></section>
+<section class="card"><h2>Saved campaign evidence</h2><div class="stat" id="shardCount">0 / 4</div><div class="subtle" id="gameState">Case status: not complete</div><div class="subtle" id="worldState">Crossings: 0</div><p class="subtle">Read-only. This page cannot reset or modify your LENZ game progress.</p></section>
+</div>
+<section class="card" aria-labelledby="metricsTitle"><h2 id="metricsTitle">Last opted-in immersive session</h2><p id="xrStats">No XR performance summary saved. Enable sampling from the XR Lab before entering immersive VR to collect an aggregate summary.</p><p class="subtle">Approximate callback frame rate is not a headset refresh-rate measurement, latency test, or Quest certification.</p></section>
+<section class="card">
+<h2>Playtest session</h2>
+<div class="options"><label for="device">Device (self-reported)</label>
+<select id="device"><option value="unspecified">Not specified</option><option value="quest-3">Meta Quest 3</option><option value="desktop">Desktop browser</option><option value="other">Another headset/browser</option></select>
+<button id="refresh" type="button">REFRESH LOCAL EVIDENCE</button></div>
+<p>Complete the steps below in the actual game, then manually mark the result. Notes are optional and stay in this browser until you export them.</p>
+</section>
+<section class="card" aria-labelledby="stepsTitle"><h2 id="stepsTitle">Case 001 acceptance steps</h2><div id="steps" class="list"></div></section>
+<section class="card">
+<h2>Export and control</h2>
+<p>A field report contains manual statuses and optional notes, a sanitized summary of Case 001 flags, basic yes/no capability checks, and any last explicitly recorded XR performance summary. It does not include the raw save, IP address, account, user agent, headset poses or precise location.</p>
+<div class="options"><button id="export" class="primary" type="button">EXPORT REPORT JSON</button><button id="clear" type="button">CLEAR TEST ANSWERS</button></div>
+<p id="feedback" role="status" aria-live="polite"></p>
+</section>
+<footer>LENZ Field Test Lab v0.10 · Local-only diagnostics · Original open-source test protocol.</footer>
+</main><script type="module" src="src/qa.js"></script></body></html>

@@ -18,6 +18,7 @@ jobs:
           node --check src/game.js
           node --check src/xr-play.js
           node --check src/xr-dead.js
+          node --check src/xr-underworld.js
           node --check src/xr-gates.js
           node --check src/xr.js
       - name: Run dependency-free tests

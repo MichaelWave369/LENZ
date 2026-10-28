@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.7)
+# LENZ — Game Bible (living v0.8)
 
 > **One world. Infinite perspectives.**
 
@@ -95,6 +95,14 @@ The first VR combat mechanic is a **three-phase shield-disabling encounter**. Re
 After the third pulse, `enemyDown` becomes true, matching the 2D game’s established sentinel defeat flag. Its exposed stabilizer (`flags.crystal`) can then be recovered in XR, enabling the final platform in The Fracture. A previously defeated Sentinel from 2D counts as down when entering VR, so no one loses progress.
 
 The encounter is intentionally **stationary and comfort-oriented**, with no forced rotations, hurt-camera, flashes or involuntary motion. The opponent does not yet navigate the space, chase players, fire projectiles or implement advanced AI. Testing on physical Quest hardware remains outstanding.
+
+## The Fracture: Rebuilding a reality pathway (v0.8)
+
+After the Sentinel encounter, the recovered **stabilizer core** powers three different spatial anchors in The Fracture. They are aimed at and activated in sequence **left → right → center**. A correct activation advances persistent `fracturePhase`; an incorrect one leaves the state unchanged. The completed pathway exposes a coordinates decoder that awards the fourth existing Case 001 shard, `flags.platform`, and unlocks the corporate vault back in Frontier.
+
+Legacy state is preserved: a previously recovered 2D Fracture shard implies the VR repair was already completed. A player who collects coordinates in the original 2D platformer automatically marks all XR anchors complete. This is deliberately non-destructive across genres.
+
+The VR presentation is currently a **stationary, aim-based puzzle** in a low-poly abstract Fracture environment, with bounded floor teleport and no physical jumps or automatic camera motion. It is not a claim that the full 2D platformer has been converted to a 3D platforming experience. The **Frontier vault ending is still only interactive in the 2D scene** at this stage.
 
 ## First prototype's scope (v0.1)
 

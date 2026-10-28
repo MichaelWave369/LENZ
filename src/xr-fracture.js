@@ -16,7 +16,8 @@ const flagsOf=s=>isObject(s?.flags)?s.flags:{};
 export function fracturePhase(state){
  if(flagsOf(state).platform===true)return 3;
  const p=state?.fracturePhase;
- return Number.isInteger(p)&&p>=0&&p<=2?p:0;
+ // Phase 3 means all anchors are stable, even if the coordinates are not yet claimed.
+ return Number.isInteger(p)&&p>=0&&p<=3?p:0;
 }
 export function activeAnchor(state){
  const p=fracturePhase(state);

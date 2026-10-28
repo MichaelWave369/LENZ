@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.6)
+# LENZ — Game Bible (living v0.7)
 
 > **One world. Infinite perspectives.**
 
@@ -87,6 +87,14 @@ The first **two-scene VR quest chain** is functional. Frontier provides the code
 The 2D medical archive still requires only the Frontier code, because it represents an abstracted interaction; completing it also marks hospital power restored. Old saves with `record` imply `deadPower` when loaded. The VR puzzle adds meaningful physical interaction without breaking earlier 2D gameplay.
 
 **Deliberate omissions:** No artificially moving horror enemy, headset-controlled weapon, jumpscare or forced camera motion has been included. Headset testing is an open acceptance criterion. A low-poly corridor and two consoles do not constitute a finished Resident Evil-style horror sequence.
+
+## Underworld: Countercode Sentinel (v0.7)
+
+The first VR combat mechanic is a **three-phase shield-disabling encounter**. Recovering Dead Sector's medical record renders the Sentinel vulnerable. The player physically aims at distinct conduits in the order **center → left → right**. Correct hits disable each node; incorrect hits impose a small, bounded loss of player vitals. The player may retreat, reload or switch perspectives without resetting shield progress, which is stored as `sentinelPhase`.
+
+After the third pulse, `enemyDown` becomes true, matching the 2D game’s established sentinel defeat flag. Its exposed stabilizer (`flags.crystal`) can then be recovered in XR, enabling the final platform in The Fracture. A previously defeated Sentinel from 2D counts as down when entering VR, so no one loses progress.
+
+The encounter is intentionally **stationary and comfort-oriented**, with no forced rotations, hurt-camera, flashes or involuntary motion. The opponent does not yet navigate the space, chase players, fire projectiles or implement advanced AI. Testing on physical Quest hardware remains outstanding.
 
 ## First prototype's scope (v0.1)
 

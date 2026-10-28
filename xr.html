@@ -14,24 +14,32 @@ button,.link{color:#dceefa;padding:12px 16px;border-radius:7px;border:1px solid 
 button.primary{background:#78e4e9;border-color:#78e4e9;color:#06141b}button:disabled{opacity:.45;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:17px}.tile{border:1px solid #314c65;border-radius:8px;padding:15px;background:#132033}.tile b{color:#7de2e6;font-size:12px;letter-spacing:.1em}.tile p{font-size:13px;margin-bottom:0}
 #status{margin-top:14px;min-height:1.6em;color:#a4c0d7;font:13px ui-monospace,monospace}
+.case{border:1px solid #33556a;border-radius:9px;padding:14px;margin-top:14px;background:#102034}
+.case p{margin:5px 0;color:#b5c8d7;font-size:13px;overflow-wrap:anywhere}
 @media(max-width:670px){.grid{grid-template-columns:1fr}}
 </style></head><body>
 <div class="wrap">
-<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.1 // Stationary, immersive genre-shifting dioramas</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
+<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.4 // World-linked, stationary immersive portal testing</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
 <section class="frame">
  <div class="frame-head"><span id="zone">EXPERIENCE: FRONTIER</span><span>WEBXR IMMERSIVE-VR EXPERIMENT</span></div>
- <canvas id="scene" width="960" height="540" aria-label="Animated low-poly WebGL preview of a LENZ portal and its reality zone"></canvas>
+ <canvas id="scene" width="960" height="540" aria-label="3D LENZ world preview with two distinctly numbered portal gates. Their destinations and site names are shown directly below."></canvas>
  <div class="buttons">
   <button class="primary" id="enter" disabled>CHECKING XR SUPPORT</button>
-  <button id="cycle">PREVIEW NEXT REALITY</button>
+  <button id="leftGate">LEFT GATE</button>
+  <button id="rightGate">RIGHT GATE</button>
   <a class="link" href="index.html">PLAY DESKTOP PROTOTYPE</a>
  </div>
 </section>
 <div id="status" role="status" aria-live="polite">INITIALIZING GRAPHICS</div>
+<div class="case">
+ <b id="caseState" class="micro">LOADING CASE 001</b>
+ <p id="xrJournal" aria-live="polite">LOADING PORTAL JOURNAL</p>
+ <p>The same browser save is used in LENZ 2D and VR. Every XR gate crossing persists your new zone, arrival location, and journal. Your evidence and health are preserved.</p>
+</div>
 <div class="grid">
 <div class="tile"><b>HEADSET REQUIREMENTS</b><p>Use a compatible headset browser (e.g., Quest Browser) over HTTPS, and grant immersive VR permission. A desktop WebGL preview works without a headset.</p></div>
-<div class="tile"><b>VR INTERACTION</b><p>Enter immersive mode, look around the physical-scale scene, and press either controller's trigger to switch realities. Use your headset's menu to exit VR.</p></div>
-<div class="tile"><b>COMFORT & SCOPE</b><p>No automatic camera movement, artificial locomotion, forced turning, flashing, or jumpscares. This is a small VR scene experiment, not yet the full playable game in VR.</p></div>
+<div class="tile"><b>VR INTERACTION</b><p>Face the two numbered gates, aim a controller's pointing ray at either opening, then squeeze its trigger. Aimed gates brighten. Use the headset menu to exit VR. On desktop, use Left Gate / Right Gate buttons.</p></div>
+<div class="tile"><b>COMFORT & SCOPE</b><p>No forced viewpoint movement, turning, locomotion, flashing, or jump scares. This is still a stationary XR scene. The XR gates share LENZ progress; full 3D exploration, combat and physical clues are not yet implemented.</p></div>
 </div>
 </div>
 <script type="module" src="src/xr.js"></script>

@@ -45,6 +45,18 @@
 
 **Gate:** A tester can change genre, make a decision, return and observe its meaningful consequence.
 
+## Milestone 1C: XR portal bridge (v0.4)
+
+- [x] Two spatially placed, visible 3D portal gates per Experience Zone
+- [x] Controller ray hit-testing: choose the gate actually aimed at
+- [x] Synced portal log, arrival coordinates, active zone and evidence to browser save
+- [x] On-page desktop buttons for left/right gate traversal
+- [x] Cross-check XR route mappings against the 2D gate contract in automated tests
+- [x] Preserve tracked headset pose with no scripted camera movement
+- [ ] Quest 3 on-device test for WebXR session, controller ray, readable markers and comfort
+- [ ] Physical VR locomotion, interactions and gameplay (not claimed as implemented)
+- [ ] VR/2D multi-device sync beyond manual JSON import/export
+
 ## Milestone 2: Expand immersive play
 
 - Quest 3 WebXR input mappings with hand/controller selection

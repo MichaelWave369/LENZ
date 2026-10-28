@@ -45,6 +45,14 @@ Every physical crossing records an entry in the **Threshold Journal** and counts
 
 For local-first ownership, **Export Save** downloads `LENZ-case-001-save.json`. **Import Save** accepts a supported versioned JSON archive and asks before replacing the current local save. Malformed files, unsupported versions and saves over 128 KiB are rejected; fields and positions are whitelisted/clamped. Existing local saves are migrated in memory automatically. The XR laboratory still shares the same saved zone but does not yet render the 2D threshold interactions.
 
+## Immersive world bridge (v0.4)
+
+The **XR Laboratory** now shows **two distinct, numbered 3D threshold gates** per Experience Zone. In a headset, point a controller at the portal opening and press its trigger. Desktop preview offers Left Gate and Right Gate buttons. Portals travel between exactly the same named site pairs as the 2D game, using the same arrival coordinates and `lenz-poc-v1` browser save. Your zone, Case 001 evidence, health, four 2D character positions and recent portal history remain connected.
+
+The XR scene also displays your persistent Case 001 shard count, vault status and recent portal crossings on its webpage. Controller selection uses a ray against the fixed portals, not a blind "next genre" rotation. An aimed gate changes color. No scripted headset camera movement or continuous locomotion.
+
+**Honest scope:** The headset scene is still a **stationary, low-poly 3D laboratory**. It does not yet offer free-roaming VR movement, 3D inventory/combat, physical clue manipulation, shared scene meshes or completed Quest 3 user testing. Progress synchronizes only between the **same browser origin and browser profile**. Use export/import on the 2D page to transfer between a PC and Quest; no cloud sync has been added.
+
 ## Architecture
 
 A dependency-free, static HTML/JavaScript prototype. No third-party runtime, account, tracking, remote resources or server requirement. GitHub Actions runs JavaScript syntax and static smoke tests. A separate workflow deploys the static site to GitHub Pages after merging to main and enabling **Settings → Pages → Source: GitHub Actions**.

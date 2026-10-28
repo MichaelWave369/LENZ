@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.3)
+# LENZ — Game Bible (living v0.4)
 
 > **One world. Infinite perspectives.**
 
@@ -63,6 +63,14 @@ The player's next perspective is now accessible through eight visible, spatially
 A **Threshold Journal** logs recent crossings and the persistent number of total crossings. This is not yet shared walkable 3D space; it's the first stage of in-world narrative geography connecting four different game mechanics.
 
 **Player data sovereignty:** A versioned JSON file can be exported and imported locally without accounts or servers. Imports are opt-in with confirmation, format validation, size limits, known-field sanitization and supported save migration. Keep production and demo saves backed up before resetting progress.
+
+## XR world portal contract (v0.4)
+
+The stationary VR laboratory now offers two visibly separate low-poly, numbered gates. A controller's real WebXR target ray must intersect a gateway to activate it via trigger. The same named site pairs, arrival coordinates and persisted `portalLog` contract used in 2D now govern XR crossing. The current zone, Case 001 shard/vault status, and player health are preserved. This is an additive interoperability milestone, not evidence that 2D and VR share a 3D physics/collision world.
+
+**Safety and comfort:** The view remains headset-tracked, no camera automation or locomotion. If a controller cannot provide a ray, no portal is silently selected. Point-and-click desktop fallback is provided. Device support and performance need real Quest 3 testing.
+
+**Data locality:** Web storage is shared across pages on the same origin and browser profile only. On separate devices, import/export the saved JSON manually.
 
 ## First prototype's scope (v0.1)
 

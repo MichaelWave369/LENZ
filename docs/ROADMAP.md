@@ -97,6 +97,19 @@
 - [ ] Proper in-headset prompts and readable spatial typography
 - [ ] Full enemies, hit feedback, spatial audio, balanced combat and collision rules
 
+## Milestone 1G: The Fracture VR stabilization puzzle (v0.8)
+
+- [x] Three separate targetable reality anchors in The Fracture
+- [x] Underworld core prerequisite and distinct left → right → center puzzle
+- [x] Persistent bridge repair stages and non-punitive incorrect choices
+- [x] Fourth Case 001 shard awarded only after all three anchors are repaired
+- [x] Save and 2D compatibility including historical fourth-shard completions
+- [x] Desktop button fallback and explicit guidance when locked
+- [x] Unit tests for prerequisites, order, save migration, ray targeting and rewards
+- [ ] Bring Frontier corporate vault opening and Case 001 ending into XR
+- [ ] Physically playtest on Quest 3 and measure controller ray reliability
+- [ ] Optional VR platforming traversal with guardrails and accessibility comfort choices
+
 ## Milestone 2: Expand immersive play
 
 - Quest 3 WebXR input mappings with hand/controller selection

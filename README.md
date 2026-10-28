@@ -80,6 +80,17 @@ The [XR Laboratory](xr.html) now includes the third linked Case 001 gameplay sce
 
 **Scope:** This is an aim-based shield combat **encounter prototype**, not a moving enemy, weapon physics, projectile simulation or full VR combat system. There is no forced camera movement, flashes or jumpscares. Quest controller accuracy, comfort and performance must still be verified on real hardware. Save sharing remains local to the same browser/profile; use the portable save export/import to move between devices.
 
+## The Fracture: Three-anchor reality repair (v0.8)
+
+Case 001 now traverses all **four XR Experience Zones**. Recover the stabilizer core after defeating the Underworld Sentinel, then enter **The Fracture** via the Fault Line portal. The core powers three targetable reality anchors, arranged vertically across the fractured environment.
+
+- **Repair the path:** Use a controller ray (or the page's desktop buttons) to activate the anchors in the sequence **left (1) → right (3) → center (2)**. The next valid target glows gold and completed anchors turn green. Skipping the sequence does not advance the repair and cannot cost health.
+- **Recover the coordinates:** Once the third anchor is restored, the decoder becomes accessible. Activate it to recover the existing `flags.platform` fourth Case 001 shard. This unlocks the sealed corporate vault back in the **2D Frontier** game.
+- **Progress and legacy saves:** The partial stage lives in `fracturePhase`, which persists between browser reloads and zone changes. Old 2D saves with `platform=true` count as all three anchors complete. Recovering the shard through the original 2D platforming challenge also completes the XR repair without losing progress.
+- **Comfort and current scope:** The VR scene remains an **aim-based stabilization puzzle**, not headset-controlled platform jumping. It uses bounded teleport, stationary portals, no artificial camera movement or flashing, and preserves all four genre saves. Quest 3 controller targeting and frame performance still need physical playtesting.
+
+**The final corporate vault remains a 2D Frontier objective**, not yet a 3D XR encounter. A future release should make that ending available inside the headset too.
+
 ## Architecture
 
 A dependency-free, static HTML/JavaScript prototype. No third-party runtime, account, tracking, remote resources or server requirement. GitHub Actions runs JavaScript syntax and static smoke tests. A separate workflow deploys the static site to GitHub Pages after merging to main and enabling **Settings → Pages → Source: GitHub Actions**.

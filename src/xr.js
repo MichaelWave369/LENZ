@@ -3,11 +3,12 @@ import {KEY,IDS,NAMES,ROUTES,GATE_CENTERS,currentZone,readXRSave,persistXRTravel
 import {TERMINAL,raySphere,floorTarget,scanFrontierReport,teleportOffset} from './xr-play.js';
 import {DEAD_BREAKER,DEAD_ARCHIVE,deadPowerOnline,restoreDeadPower,retrieveMedicalArchive} from './xr-dead.js';
 import {CONDUITS,CORE,PULSE_ORDER,phaseOf,activeConduit,pulseConduit,recoverDungeonCore} from './xr-underworld.js';
+import {ANCHORS,COORDINATES,STABILIZATION_ORDER,fracturePhase,activeAnchor,stabilizeAnchor,collectVaultCoordinates} from './xr-fracture.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
-const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),coreButton=document.getElementById('underworldCore'),conduitButtons=[0,1,2].map(i=>document.getElementById('sentinelNode'+i)),label=document.getElementById('zone');
+const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),coreButton=document.getElementById('underworldCore'),conduitButtons=[0,1,2].map(i=>document.getElementById('sentinelNode'+i)),anchorButtons=[0,1,2].map(i=>document.getElementById('fractureAnchor'+i)),coordinatesButton=document.getElementById('fractureCoordinates'),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
 let zone=currentZone(readXRSave(localStorage)),session=null,referenceSpace=null,program,loc={},cubeBuffer;
-let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null,sentinelTarget=-1,coreTarget=false,lastPulseMs=-Infinity;
+let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null,sentinelTarget=-1,coreTarget=false,fractureTarget=-1,coordinatesTarget=false,lastPulseMs=-Infinity,lastAnchorMs=-Infinity;
 function updateLabel(){
  label.textContent='EXPERIENCE: '+NAMES[zone];
  const routes=ROUTES[zone];
@@ -29,6 +30,19 @@ function updateLabel(){
  });
  coreButton.disabled=zone!=='underworld'||flags.crystal===true;
  coreButton.textContent=flags.crystal===true?'STABILIZER RECOVERED':'RECOVER STABILIZER CORE';
+ const fPhase=fracturePhase(save),fActive=activeAnchor(save);
+ anchorButtons.forEach((button,i)=>{
+  button.disabled=zone!=='fracture'||flags.platform===true;
+  button.textContent='ANCHOR '+['LEFT','CENTER','RIGHT'][i]+' / '+(i+1);
+  button.classList.toggle('active-node',zone==='fracture'&&flags.crystal===true&&i===fActive);
+ });
+ coordinatesButton.disabled=zone!=='fracture'||flags.platform===true;
+ coordinatesButton.textContent=flags.platform===true?'VAULT COORDINATES RECOVERED':'EXTRACT VAULT COORDINATES';
+ document.getElementById('fractureStatus').textContent=zone!=='fracture'?'FRACTURE STABILITY GRID AVAILABLE AFTER PORTAL CROSSING':
+  flags.platform===true?'VAULT COORDINATES RECOVERED // RETURN TO FRONTIER':
+  flags.crystal!==true?'NO POWER // RECOVER UNDERWORLD STABILIZER CORE':
+  fPhase===3?'BRIDGE STABILIZED // EXTRACT VAULT COORDINATES':
+  'REALITY ANCHORS '+fPhase+'/3 // ACTIVATE '+['LEFT','CENTER','RIGHT'][fActive]+' SIGNAL';
  document.getElementById('sentinelStatus').textContent=zone!=='underworld'?'UNDERWORLD ENCOUNTER AVAILABLE AFTER PORTAL CROSSING':
   save.enemyDown===true?'SENTINEL DISABLED // SCAN THE CORE':
   flags.record!==true?'SENTINEL IMMUNE // RECOVER DEAD SECTOR MEDICAL COUNTERCODE':
@@ -79,11 +93,29 @@ function pulseSentinel(index){
 function takeCore(){return updateUnderworld(recoverDungeonCore)}
 conduitButtons.forEach((b,i)=>b.addEventListener('click',()=>pulseSentinel(i)));
 coreButton.addEventListener('click',takeCore);
+function fractureAction(operation){
+ try{
+  const state={...readXRSave(localStorage),zone};
+  const result=operation(state);
+  if(result.changed)localStorage.setItem(KEY,JSON.stringify(result.state));
+  updateLabel();status.textContent=result.reason;
+  return result.changed;
+ }catch(err){status.textContent='FRACTURE ERROR // '+String(err?.message||err).slice(0,100);return false}
+}
+function repairAnchor(index){
+ if(zone!=='fracture')return false;
+ const now=performance.now();if(now-lastAnchorMs<450)return false;
+ lastAnchorMs=now;
+ return fractureAction(state=>stabilizeAnchor(state,index));
+}
+function getCoordinates(){return fractureAction(collectVaultCoordinates)}
+anchorButtons.forEach((b,i)=>b.addEventListener('click',()=>repairAnchor(i)));
+coordinatesButton.addEventListener('click',getCoordinates);
 function traverse(index){
  try{
   const state=persistXRTravel(localStorage,zone,index);
   if(!state)return false;
-  zone=currentZone(state);highlightedGate=-1;deadTarget=null;sentinelTarget=-1;coreTarget=false;updateLabel();
+  zone=currentZone(state);highlightedGate=-1;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;updateLabel();
   return true;
  }catch(err){
   status.textContent='SAVE ERROR // '+String(err?.message||err).slice(0,120);return false;
@@ -110,6 +142,11 @@ function changeZone(event){
   }
   if(raySphere(origin,orientation,CORE)!==null)return takeCore();
  }
+ if(zone==='fracture'){
+  for(let i=0;i<ANCHORS.length;i++)
+   if(raySphere(origin,orientation,ANCHORS[i])!==null)return repairAnchor(i);
+  if(raySphere(origin,orientation,COORDINATES)!==null)return getCoordinates();
+ }
  const floor=floorTarget(origin,orientation);
  if(floor)return teleportTo(floor,frame);
  status.textContent='AIM AT A PORTAL, A TARGETABLE OBJECT, OR THE FLOOR';
@@ -125,7 +162,7 @@ function teleportTo(target,frame){
  }
  try{
   referenceSpace=referenceSpace.getOffsetReferenceSpace(new XRRigidTransform(delta));
-  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;
+  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;
   status.textContent='TELEPORT COMPLETE // AIM AT GATE, TERMINAL OR FLOOR';
   return true;
  }catch(err){status.textContent='TELEPORT FAILED // '+String(err?.message||err).slice(0,90);return false}
@@ -243,9 +280,23 @@ function scene(){
   box(CORE.x,CORE.y,CORE.z,.53,.54,.53,coreTarget?C.pale:down?C.ice:C.dark);
   box(CORE.x,CORE.y+.46,CORE.z,.38,.12,.38,down?C.green:C.red);
  }else{
+  const saved=readXRSave(localStorage),stage=fracturePhase(saved);
   const platforms=[[0,-5.3],[-1.3,-6.6],[.4,-7.9],[1.6,-9.2],[-.9,-10.5]];
-  platforms.forEach(([x,z],i)=>box(x,.25+i*.35,z,1.6,.23,.95,i%2?C.gold:C.blue));
-  box(1.6,2.22,-9.2,.25,.8,.25,C.ice);
+  platforms.forEach(([x,z],i)=>{
+   const repaired=i===0||i<=stage;
+   box(x,.25+i*.35,z,1.6,.23,.95,repaired?C.blue:C.dark);
+  });
+  // The broken bridge materializes segment-by-segment as each anchor stabilizes.
+  for(let i=0;i<ANCHORS.length;i++){
+   const a=ANCHORS[i],active=activeAnchor(saved);
+   const repaired=STABILIZATION_ORDER.slice(0,stage).includes(i);
+   const color=repaired?C.green:i===fractureTarget?C.pale:i===active&&saved.flags?.crystal===true?C.gold:C.red;
+   box(a.x,a.y,a.z,.40,.42,.25,color);
+   drawDigit(a.x,a.y+.38,a.z+.08,i+1,color);
+  }
+  box(COORDINATES.x,COORDINATES.y,COORDINATES.z,.62,.64,.45,
+   coordinatesTarget?C.pale:stage===3?C.ice:C.dark);
+  box(COORDINATES.x,COORDINATES.y+.46,COORDINATES.z,.4,.10,.38,stage===3?C.green:C.red);
  }
  // Near-space apparatus makes the room feel physically grounded.
  box(-2.6,.65,-1.8,.46,1.3,.44,C.stone);box(2.6,.65,-1.8,.46,1.3,.44,C.stone);
@@ -283,7 +334,7 @@ function preview(){
 function immersiveFrame(time,frame){
  if(!session)return;session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
- highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;
+ highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;
  for(const source of session.inputSources||[]){
   const ray=frame.getPose(source.targetRaySpace,referenceSpace);
   if(!ray)continue;
@@ -297,6 +348,11 @@ function immersiveFrame(time,frame){
    for(let i=0;i<CONDUITS.length;i++)if(raySphere(origin,orientation,CONDUITS[i])!==null){sentinelTarget=i;break}
    if(sentinelTarget!==-1)break;
    if(raySphere(origin,orientation,CORE)!==null){coreTarget=true;break}
+  }
+  if(zone==='fracture'){
+   for(let i=0;i<ANCHORS.length;i++)if(raySphere(origin,orientation,ANCHORS[i])!==null){fractureTarget=i;break}
+   if(fractureTarget!==-1)break;
+   if(raySphere(origin,orientation,COORDINATES)!==null){coordinatesTarget=true;break}
   }
   teleportPreview=floorTarget(origin,orientation);
   if(teleportPreview)break;
@@ -313,7 +369,7 @@ async function enterXR(){
   enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
-   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
+   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
   xr.updateRenderState({baseLayer:new XRWebGLLayer(xr,gl,{alpha:false,depth:true})});
@@ -328,7 +384,7 @@ async function enterXR(){
 enter.addEventListener('click',enterXR);
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
- enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;coreButton.disabled=true;conduitButtons.forEach(b=>b.disabled=true);
+ enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;coreButton.disabled=true;conduitButtons.forEach(b=>b.disabled=true);coordinatesButton.disabled=true;anchorButtons.forEach(b=>b.disabled=true);
 }else{
  try{init();requestAnimationFrame(preview);updateLabel();
   if(navigator.xr){

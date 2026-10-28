@@ -2,11 +2,12 @@
 import {KEY,IDS,NAMES,ROUTES,GATE_CENTERS,currentZone,readXRSave,persistXRTravel,targetGate} from './xr-gates.js';
 import {TERMINAL,raySphere,floorTarget,scanFrontierReport,teleportOffset} from './xr-play.js';
 import {DEAD_BREAKER,DEAD_ARCHIVE,deadPowerOnline,restoreDeadPower,retrieveMedicalArchive} from './xr-dead.js';
+import {CONDUITS,CORE,PULSE_ORDER,phaseOf,activeConduit,pulseConduit,recoverDungeonCore} from './xr-underworld.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
-const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),label=document.getElementById('zone');
+const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),coreButton=document.getElementById('underworldCore'),conduitButtons=[0,1,2].map(i=>document.getElementById('sentinelNode'+i)),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
 let zone=currentZone(readXRSave(localStorage)),session=null,referenceSpace=null,program,loc={},cubeBuffer;
-let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null;
+let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null,sentinelTarget=-1,coreTarget=false,lastPulseMs=-Infinity;
 function updateLabel(){
  label.textContent='EXPERIENCE: '+NAMES[zone];
  const routes=ROUTES[zone];
@@ -20,6 +21,18 @@ function updateLabel(){
  archiveButton.disabled=zone!=='dead'||flags.record===true;
  powerButton.textContent=deadPowerOnline(save)?'HOSPITAL POWER ONLINE':'RESTORE HOSPITAL POWER';
  archiveButton.textContent=flags.record===true?'MEDICAL FILE RECOVERED':'READ MEDICAL ARCHIVE';
+ const stage=phaseOf(save),active=activeConduit(save);
+ conduitButtons.forEach((button,i)=>{
+  button.disabled=zone!=='underworld'||save.enemyDown===true;
+  button.textContent='PULSE '+['LEFT','CENTER','RIGHT'][i]+' / '+(i+1);
+  button.classList.toggle('active-node',zone==='underworld'&&i===active&&flags.record===true);
+ });
+ coreButton.disabled=zone!=='underworld'||flags.crystal===true;
+ coreButton.textContent=flags.crystal===true?'STABILIZER RECOVERED':'RECOVER STABILIZER CORE';
+ document.getElementById('sentinelStatus').textContent=zone!=='underworld'?'UNDERWORLD ENCOUNTER AVAILABLE AFTER PORTAL CROSSING':
+  save.enemyDown===true?'SENTINEL DISABLED // SCAN THE CORE':
+  flags.record!==true?'SENTINEL IMMUNE // RECOVER DEAD SECTOR MEDICAL COUNTERCODE':
+  'SHIELD PHASE '+stage+'/3 // AIM AT '+['LEFT','CENTER','RIGHT'][active]+' CONDUIT';
  const found=['report','record','crystal','platform'].filter(k=>flags[k]===true).length;
  document.getElementById('caseState').textContent='SHARDS '+found+'/4 · '+(flags.vault===true?'CASE 001 COMPLETE':'CORPORATE VAULT SEALED')+' · '+(save.portalCount||0)+' GATE CROSSINGS';
  document.getElementById('xrJournal').textContent=(save.portalLog||[]).slice(-5).reverse().join(' · ')||'NO THRESHOLDS RECORDED';
@@ -48,11 +61,29 @@ function restorePower(){return changeDeadState(restoreDeadPower)}
 function readArchive(){return changeDeadState(retrieveMedicalArchive)}
 powerButton.addEventListener('click',restorePower);
 archiveButton.addEventListener('click',readArchive);
+function updateUnderworld(operation){
+ try{
+  const previous={...readXRSave(localStorage),zone};
+  const result=operation(previous);
+  if(result.changed)localStorage.setItem(KEY,JSON.stringify(result.state));
+  updateLabel();status.textContent=result.reason;
+  return result.changed;
+ }catch(err){status.textContent='SENTINEL ERROR // '+String(err?.message||err).slice(0,110);return false}
+}
+function pulseSentinel(index){
+ const now=performance.now();
+ if(now-lastPulseMs<500||zone!=='underworld')return false;
+ lastPulseMs=now;
+ return updateUnderworld(s=>pulseConduit(s,index));
+}
+function takeCore(){return updateUnderworld(recoverDungeonCore)}
+conduitButtons.forEach((b,i)=>b.addEventListener('click',()=>pulseSentinel(i)));
+coreButton.addEventListener('click',takeCore);
 function traverse(index){
  try{
   const state=persistXRTravel(localStorage,zone,index);
   if(!state)return false;
-  zone=currentZone(state);highlightedGate=-1;deadTarget=null;updateLabel();
+  zone=currentZone(state);highlightedGate=-1;deadTarget=null;sentinelTarget=-1;coreTarget=false;updateLabel();
   return true;
  }catch(err){
   status.textContent='SAVE ERROR // '+String(err?.message||err).slice(0,120);return false;
@@ -73,9 +104,15 @@ function changeZone(event){
   if(raySphere(origin,orientation,DEAD_BREAKER)!==null)return restorePower();
   if(raySphere(origin,orientation,DEAD_ARCHIVE)!==null)return readArchive();
  }
+ if(zone==='underworld'){
+  for(let i=0;i<CONDUITS.length;i++){
+   if(raySphere(origin,orientation,CONDUITS[i])!==null)return pulseSentinel(i);
+  }
+  if(raySphere(origin,orientation,CORE)!==null)return takeCore();
+ }
  const floor=floorTarget(origin,orientation);
  if(floor)return teleportTo(floor,frame);
- status.textContent='AIM AT A GATE, A ZONE CONSOLE, OR THE FLOOR';
+ status.textContent='AIM AT A PORTAL, A TARGETABLE OBJECT, OR THE FLOOR';
  return false;
 }
 function teleportTo(target,frame){
@@ -88,7 +125,7 @@ function teleportTo(target,frame){
  }
  try{
   referenceSpace=referenceSpace.getOffsetReferenceSpace(new XRRigidTransform(delta));
-  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;
+  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;
   status.textContent='TELEPORT COMPLETE // AIM AT GATE, TERMINAL OR FLOOR';
   return true;
  }catch(err){status.textContent='TELEPORT FAILED // '+String(err?.message||err).slice(0,90);return false}

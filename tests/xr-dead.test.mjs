@@ -89,7 +89,7 @@ test('2D save migration retains deadPower, recognizes older collected medical fi
 });
 test('XR ray priority puts zone devices after portals and ahead of floor teleport',()=>{
  const gate=xr.indexOf('const which=targetGate(origin,orientation)');
- const frontier=xr.indexOf("zone==='frontier'&&raySphere(origin,orientation,TERMINAL)");
+ const frontier=xr.indexOf('raySphere(origin,orientation,TERMINAL)',gate);
  const breaker=xr.indexOf("raySphere(origin,orientation,DEAD_BREAKER)");
  const archive=xr.indexOf("raySphere(origin,orientation,DEAD_ARCHIVE)");
  const floor=xr.indexOf('const floor=floorTarget(origin,orientation)');

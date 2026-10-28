@@ -23,7 +23,10 @@ a{color:var(--cyan)}.wrap{width:min(1450px,96vw);margin:auto}.top{display:flex;a
 .side{display:flex;flex-direction:column;gap:12px}.panel{border:1px solid var(--line);border-radius:10px;background:#111a2a;padding:16px}.panel h2{margin:0 0 10px;letter-spacing:.12em;font-size:12px;color:var(--cyan);text-transform:uppercase}.panel p{font-size:13px;color:var(--muted);margin:0 0 12px}
 .zones{display:grid;gap:8px}.zone{width:100%;text-align:left;border:1px solid #37445c;background:#111e30;color:var(--ink);border-radius:7px;padding:9px 11px}.zone.selected{border-color:var(--cyan);background:#123344;box-shadow:inset 3px 0 0 var(--cyan)}
 .zone b{display:block;letter-spacing:.07em;font-size:13px}.zone span{display:block;color:#a2b2c7;font-size:11px}
-.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.controls .btn{padding:10px 8px;font-size:12px}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.evidence{font:11px/1.8 ui-monospace,monospace;color:#adc7d9;overflow-wrap:anywhere}
+.microline{font-size:10px!important;color:#65dbe9!important;letter-spacing:.15em;text-transform:uppercase}
+.sealed{padding:9px 11px;background:#0b1c2b;border-left:3px solid #3d8999;font:11px/1.6 ui-monospace,monospace;color:#d2e7f3!important}
+.controls .btn{padding:10px 8px;font-size:12px}
 kbd{font:12px ui-monospace,monospace;border:1px solid #67768c;border-radius:3px;padding:2px 5px;background:#17263a}
 .note{padding:18px 0 30px;color:#98aec8;font-size:12px;display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap}
 .touch{display:none;margin:10px 0;justify-content:center;gap:16px;align-items:center}.dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,44px);gap:5px}.touch button{background:#152b42;color:#e7f5ff;border:1px solid #60829e;border-radius:7px;font-size:21px;touch-action:none}.touch .act{height:90px;min-width:76px;font-size:14px}
@@ -62,7 +65,16 @@ kbd{font:12px ui-monospace,monospace;border:1px solid #67768c;border-radius:3px;
  </div></section>
  <section class="panel"><h2>Field controls</h2><p><kbd>W A S D</kbd> / arrows: move<br><kbd>E</kbd> interact · <kbd>SPACE</kbd> action<br><kbd>Q</kbd> next lens · <kbd>1</kbd>–<kbd>4</kbd> select</p>
  <div class="controls"><button id="action" class="btn primary">ACTION / SPACE</button><button id="interact" class="btn">INTERACT / E</button><button id="shift" class="btn">SHIFT / Q</button><button id="reset" class="btn">RESET SAVE</button></div></section>
- <section class="panel" id="mission"><h2>Directive // 001</h2><p>Find evidence that the L.E.N.Z. Corporation has merged incompatible Experience Zones. Recover four data shards, survive each perspective, and follow the anomaly.</p><p>Prototype note: immersive VR is a separate experimental scene, not yet the complete 2D game in 3D.</p><a href="xr.html">Enter the XR laboratory</a></section>
+ <section class="panel" aria-labelledby="caseTitle">
+  <h2 id="caseTitle">Case 001 // Consequence Chain</h2>
+  <p id="caseStatus" aria-live="polite">Retrieve evidence in Frontier to begin the chain.</p>
+  <p class="microline">Evidence archive</p>
+  <p id="caseEvidence" class="evidence" aria-live="polite">No data recovered yet.</p>
+  <p id="caseEnding" class="sealed">FINAL FILE // SEALED</p>
+ </section>
+ <section class="panel" id="mission"><h2>Directive // 001</h2>
+  <p>Actions in each reality affect the next: Frontier provides Dead Sector access, Dead Sector reveals the sentinel's weakness, Underworld stabilizes a platform in Fracture, and Fracture unlocks the Frontier vault.</p>
+  <p>VR remains a separate experimental scene, not yet the complete 2D game in 3D.</p><a href="xr.html">Enter the XR laboratory</a></section>
 </aside>
 </main>
 <div class="touch" aria-label="Touch game controls">

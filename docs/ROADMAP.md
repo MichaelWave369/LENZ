@@ -83,6 +83,20 @@
 - [ ] Physical Quest 3 test, including controller ray alignment and text readability
 - [ ] Stateful VR enemy, combat, collision-safe teleport and immersive audio
 
+## Milestone 1F: Underworld Sentinel Combat (v0.7)
+
+- [x] Low-poly Sentinel body and three separate targetable conduits
+- [x] Only Dead Sector countercode permits damage to Sentinel
+- [x] Three-phase aimed pulse encounter, deterministic order and measured miss penalty
+- [x] Persistent `sentinelPhase`, shared `enemyDown` and `crystal` state
+- [x] XR ray targeting and desktop fallback buttons
+- [x] Exposed core becomes the third Case 001 shard after victory
+- [x] Automatic compatibility with earlier successful 2D sentinel fights
+- [x] Unit tests: target geometry, ordered pulses, wrong targets, one-time core reward, legacy saves
+- [ ] Quest 3 playtest with tracked controllers and accessibility/comfort review
+- [ ] Proper in-headset prompts and readable spatial typography
+- [ ] Full enemies, hit feedback, spatial audio, balanced combat and collision rules
+
 ## Milestone 2: Expand immersive play
 
 - Quest 3 WebXR input mappings with hand/controller selection

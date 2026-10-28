@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.2)
+# LENZ — Game Bible (living v0.3)
 
 > **One world. Infinite perspectives.**
 
@@ -55,6 +55,14 @@ The first connected case has five real dependencies, not just flavor text:
 5. **Frontier:** The coordinates unlock the corporate vault and a hidden directive: **"THE SUBJECT IS THE PRODUCT."**
 
 A persistent Case 001 panel shows the next objective, recovered evidence and final-file state. Blocked objectives explain the required prerequisite. The corporate directive is a final narrative flag, not an extra data shard. The separate WebXR dioramas do not yet contain these interactions.
+
+## World-connected Thresholds (v0.3)
+
+The player's next perspective is now accessible through eight visible, spatially paired threshold gates. Four named sites form a loop: **Hospital** (Frontier ↔ Dead Sector), **Sublevel** (Dead Sector ↔ Underworld), **Fault Line** (Underworld ↔ Fracture), and **Breach** (Fracture ↔ Frontier). At each threshold, the player explicitly presses E and appears at a mapped arrival point. The position is intentionally shifted away from some gates to avoid accidental re-entry, and the ability to jump around using the old experimental reality selector is preserved.
+
+A **Threshold Journal** logs recent crossings and the persistent number of total crossings. This is not yet shared walkable 3D space; it's the first stage of in-world narrative geography connecting four different game mechanics.
+
+**Player data sovereignty:** A versioned JSON file can be exported and imported locally without accounts or servers. Imports are opt-in with confirmation, format validation, size limits, known-field sanitization and supported save migration. Keep production and demo saves backed up before resetting progress.
 
 ## First prototype's scope (v0.1)
 

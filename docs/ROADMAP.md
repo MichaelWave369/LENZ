@@ -24,6 +24,17 @@
 - [ ] Fully diegetic scene transitions, portals and shared geometry
 - [ ] Manual save import/export
 
+## Milestone 1B: Diegetic links and portable saves (v0.3)
+
+- [x] Physical, labeled portals in each of the four 2D zones
+- [x] Bidirectional portal pairs and intentional arrival locations
+- [x] Persistent portal crossing count and recent-travel journal
+- [x] Versioned local JSON export/import with validation and confirmation
+- [x] Compatibility with previous local saves
+- [x] Unit tests for portals, save round-trip, corrupted import and legacy state
+- [ ] Shared 3D coordinates and diegetic gate traversal within the XR laboratory
+- [ ] Real browser end-to-end tests on desktop and Quest 3
+
 ## Milestone 1: Prove the genre transition
 
 - In-world portal gate that connects *the same place* in two perspectives

@@ -46,25 +46,39 @@ kbd{font:12px ui-monospace,monospace;border:1px solid #67768c;border-radius:3px;
 <section class="viewport" aria-label="Playable LENZ prototype">
  <div class="frame-head"><span class="label" id="zoneTitle">EXPERIENCE ZONE // FRONTIER</span><span class="label" id="signal">SIGNAL: STABLE</span></div>
  <div class="canvas-shell">
-  <canvas id="game" width="1120" height="630" aria-label="Interactive game world. Use WASD or arrow keys to move, E to interact, Space for actions, Q to change zones." tabindex="0">Your browser needs canvas support.</canvas>
+  <canvas id="game" width="1120" height="630" aria-label="Interactive game world. Use WASD or arrow keys to move, E to interact or use physical portals, Space for actions, Q to change zones." tabindex="0">Your browser needs canvas support.</canvas>
   <div class="overlay"><span class="chip" id="objective">Locate the anomaly.</span><span class="chip" id="ticker" aria-live="polite">L.E.N.Z. SYSTEM ONLINE</span></div>
  </div>
  <div class="readout" aria-label="Persistent player status">
   <div class="stat"><small>VITALS</small><strong id="health">100 / 100</strong></div>
-  <div class="stat"><small>DATA SHARDS</small><strong id="shards">0 / 3</strong></div>
+  <div class="stat"><small>DATA SHARDS</small><strong id="shards">0 / 4</strong></div>
   <div class="stat"><small>ZONES SEEN</small><strong id="visited">1 / 4</strong></div>
  </div>
 </section>
 <aside class="side">
- <section class="panel"><h2>Reality selector</h2><p>Switch genre lenses. Your vitals and recovered data persist between them.</p>
+ <section class="panel"><h2>Reality selector</h2><p>Walk to a glowing portal and press E to cross into another reality. Use the selector or Q as prototype shortcuts.</p>
  <div class="zones" id="zones">
    <button class="zone selected" data-zone="frontier"><b>01 // FRONTIER</b><span>Open-world exploration</span></button>
    <button class="zone" data-zone="dead"><b>02 // DEAD SECTOR</b><span>Survival horror</span></button>
    <button class="zone" data-zone="underworld"><b>03 // UNDERWORLD</b><span>Isometric dungeon combat</span></button>
    <button class="zone" data-zone="fracture"><b>04 // THE FRACTURE</b><span>Side-scrolling platformer</span></button>
  </div></section>
- <section class="panel"><h2>Field controls</h2><p><kbd>W A S D</kbd> / arrows: move<br><kbd>E</kbd> interact · <kbd>SPACE</kbd> action<br><kbd>Q</kbd> next lens · <kbd>1</kbd>–<kbd>4</kbd> select</p>
+ <section class="panel"><h2>Field controls</h2><p><kbd>W A S D</kbd> / arrows: move<br><kbd>E</kbd> interact / traverse portal<br><kbd>SPACE</kbd> action · <kbd>Q</kbd> next lens<br><kbd>1</kbd>–<kbd>4</kbd> select</p>
  <div class="controls"><button id="action" class="btn primary">ACTION / SPACE</button><button id="interact" class="btn">INTERACT / E</button><button id="shift" class="btn">SHIFT / Q</button><button id="reset" class="btn">RESET SAVE</button></div></section>
+ <section class="panel" aria-labelledby="portalTitle">
+  <h2 id="portalTitle">Threshold Journal</h2>
+  <p>Walk into a glowing threshold and press E. Each gate has a paired return route and a named location.</p>
+  <p class="microline" id="portalCount">0 crossings</p>
+  <p class="evidence" id="portalLog" aria-live="polite">No physical portals crossed yet.</p>
+ </section>
+ <section class="panel"><h2>Portable Save</h2>
+  <p>Progress belongs to you. Export a JSON save to back it up or transfer it to another browser. Import replaces the current save only after confirmation.</p>
+  <div class="controls">
+   <button id="export" class="btn">EXPORT SAVE</button>
+   <button id="import" class="btn">IMPORT SAVE</button>
+  </div>
+  <input id="importFile" type="file" accept=".json,application/json" hidden aria-label="Select a LENZ JSON save file">
+ </section>
  <section class="panel" aria-labelledby="caseTitle">
   <h2 id="caseTitle">Case 001 // Consequence Chain</h2>
   <p id="caseStatus" aria-live="polite">Retrieve evidence in Frontier to begin the chain.</p>
@@ -73,7 +87,7 @@ kbd{font:12px ui-monospace,monospace;border:1px solid #67768c;border-radius:3px;
   <p id="caseEnding" class="sealed">FINAL FILE // SEALED</p>
  </section>
  <section class="panel" id="mission"><h2>Directive // 001</h2>
-  <p>Actions in each reality affect the next: Frontier provides Dead Sector access, Dead Sector reveals the sentinel's weakness, Underworld stabilizes a platform in Fracture, and Fracture unlocks the Frontier vault.</p>
+  <p>Follow the threshold route from Frontier to Dead Sector, Underworld, The Fracture, and back. Every portal has a place in the world, and discoveries affect subsequent zones.</p>
   <p>VR remains a separate experimental scene, not yet the complete 2D game in 3D.</p><a href="xr.html">Enter the XR laboratory</a></section>
 </aside>
 </main>
@@ -83,7 +97,7 @@ kbd{font:12px ui-monospace,monospace;border:1px solid #67768c;border-radius:3px;
   <button data-hold="arrowleft" aria-label="Move left">←</button><button data-hold="arrowdown" aria-label="Move down">↓</button><button data-hold="arrowright" aria-label="Move right">→</button>
  </div><button class="act" id="touchAction">ACTION</button><button class="act" id="touchInteract">INTERACT</button>
 </div>
-<footer class="note"><span>LENZ // Prototype v0.1.0 · No tracking · Local browser save · Original assets</span><span>Inspired by Shayne's dream-game pitch. Built to test the adaptive genre concept.</span></footer>
+<footer class="note"><span>LENZ // Prototype v0.3.0 · No tracking · Portable local saves · Original assets</span><span>Inspired by Shayne's dream-game pitch. Built to test the adaptive genre concept.</span></footer>
 </div>
 <script type="module" src="src/game.js"></script>
 </body></html>

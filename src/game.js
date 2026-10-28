@@ -1,4 +1,4 @@
-// LENZ v0.1: dependency-free, single-world-state genre experiment.
+// LENZ v0.3: dependency-free, single-world-state genre experiment.
 // This is a prototype: four mechanically different scenes, not four full games.
 const canvas=document.getElementById('game'),c=canvas.getContext('2d');
 const W=1120,H=630,KEY='lenz-poc-v1';
@@ -26,25 +26,75 @@ function nextDirective(){
  if(!has('platform'))return '05 / The core powers the Fracture bridge. Cross it and recover the coordinates.';
  return '06 / Return to Frontier. The coordinates unlocked a sealed L.E.N.Z. vault.';
 }
+// Each gate belongs to an identifiable physical location with a paired return route.
+// Portals alter the player's arrival coordinates without resetting collected evidence.
+const GATES={
+ frontier:[
+  {id:'hospital-in',site:'HOSPITAL',to:'dead',x:210,y:349,arrival:{x:270,y:450}},
+  {id:'fracture-out',site:'BREACH',to:'fracture',x:180,y:494,arrival:{x:1000,y:560}}
+ ],
+ dead:[
+  {id:'hospital-out',site:'HOSPITAL',to:'frontier',x:210,y:450,arrival:{x:265,y:349}},
+  {id:'sublevel-in',site:'SUBLEVEL',to:'underworld',x:510,y:350,arrival:{x:1,y:6}}
+ ],
+ underworld:[
+  {id:'sublevel-out',site:'SUBLEVEL',to:'dead',x:1,y:6,arrival:{x:445,y:350}},
+  {id:'fault-in',site:'FAULT LINE',to:'fracture',x:10,y:7,arrival:{x:135,y:560}}
+ ],
+ fracture:[
+  {id:'fault-out',site:'FAULT LINE',to:'underworld',x:100,y:560,arrival:{x:9,y:7}},
+  {id:'breach-in',site:'BREACH',to:'frontier',x:1060,y:560,arrival:{x:180,y:492}}
+ ]
+};
+const ALL_GATES=Object.values(GATES).flat().map(g=>g.id);
+const SAVE_KIND='LENZ_CASE_SAVE';
+const SAVE_VERSION=1;
+const SAVE_LIMIT=131072;
 const defaults=()=>({
- zone:'frontier',health:100,flags:{},visited:['frontier'],
+ zone:'frontier',health:100,flags:{},visited:['frontier'],portalCount:0,portalLog:[],
  positions:{frontier:{x:160,y:355},dead:{x:125,y:370},underworld:{x:1,y:6},fracture:{x:100,y:560,vy:0}},
  enemyDown:false
 });
-function load(){
- try{
-  const raw=JSON.parse(localStorage.getItem(KEY));if(!raw||!IDS.includes(raw.zone))return defaults();
-  const d=defaults();
-  d.zone=raw.zone;d.health=Math.max(1,Math.min(100,Number(raw.health)||100));
-  for(const id of ['report','record','crystal','platform','vault'])if(raw.flags?.[id]===true)d.flags[id]=true;
-  d.visited=IDS.filter(id=>raw.visited?.includes(id));if(!d.visited.includes(d.zone))d.visited.push(d.zone);
-  d.enemyDown=raw.enemyDown===true;
-  for(const id of IDS){const v=raw.positions?.[id];if(v&&Number.isFinite(v.x)&&Number.isFinite(v.y)){
-   d.positions[id].x= v.x;d.positions[id].y=v.y;
-  }}
-  return d;
- }catch{return defaults();}
+function normalizeState(raw){
+ if(!raw||typeof raw!=='object'||Array.isArray(raw)||!IDS.includes(raw.zone))return null;
+ const d=defaults();
+ d.zone=raw.zone;
+ const health=Number(raw.health);
+ d.health=Number.isFinite(health)?clamp(health,1,100):100;
+ const flags=raw.flags&&typeof raw.flags==='object'&&!Array.isArray(raw.flags)?raw.flags:{};
+ for(const id of ['report','record','crystal','platform','vault'])if(flags[id]===true)d.flags[id]=true;
+ const visited=Array.isArray(raw.visited)?raw.visited:[];
+ d.visited=IDS.filter(id=>visited.includes(id));if(!d.visited.includes(d.zone))d.visited.push(d.zone);
+ d.enemyDown=raw.enemyDown===true;
+ for(const id of IDS){
+  const v=raw.positions?.[id],b=d.positions[id];
+  if(v&&Number.isFinite(v.x)&&Number.isFinite(v.y)){
+   const grid=id==='underworld',platform=id==='fracture';
+   b.x=clamp(v.x,grid?0:platform?20:34,grid?11:platform?1090:1080);
+   b.y=clamp(v.y,grid?0:platform?0:94,grid?8:platform?630:560);
+   if(platform)b.vy=Number.isFinite(v.vy)?clamp(v.vy,-550,900):0;
+  }
+ }
+ const count=Number(raw.portalCount);
+ d.portalCount=Number.isSafeInteger(count)&&count>=0?Math.min(count,999999):0;
+ d.portalLog=Array.isArray(raw.portalLog)?raw.portalLog.filter(id=>ALL_GATES.includes(id)).slice(-12):[];
+ return d;
 }
+function load(){
+ try{return normalizeState(JSON.parse(localStorage.getItem(KEY)))||defaults()}catch{return defaults()}
+}
+function portableSave(){
+ return JSON.stringify({kind:SAVE_KIND,version:SAVE_VERSION,exportedAt:new Date().toISOString(),state:s},null,2);
+}
+function parsePortableSave(json){
+ if(typeof json!=='string'||json.length>SAVE_LIMIT)throw Error('Save file too large or unreadable.');
+ let data;try{data=JSON.parse(json)}catch{throw Error('Invalid JSON save file.')}
+ if(!data||data.kind!==SAVE_KIND||data.version!==SAVE_VERSION)throw Error('Unsupported LENZ save format/version.');
+ const clean=normalizeState(data.state);
+ if(!clean)throw Error('Missing or invalid player state.');
+ return clean;
+}
+
 let s=load(),keys=new Set(),facing=0,enemy={x:860,y:355},lastHit=0,lastSave=0,notice='L.E.N.Z. SYSTEM ONLINE',noticeUntil=0,gamepadWas={};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch{}}
 function p(){return s.positions[s.zone]}
@@ -68,6 +118,8 @@ function hud(){
  document.getElementById('caseStatus').textContent=nextDirective();
  document.getElementById('caseEvidence').textContent=EVIDENCE.map(([id,label])=>(has(id)?'[RECOVERED] ':'[MISSING] ')+label).join(' | ');
  document.getElementById('caseEnding').textContent=has('vault')?'EVIDENCE 005 // CORPORATE DIRECTIVE: "THE SUBJECT IS THE PRODUCT." Your escape is the next experiment.':'FINAL FILE // SEALED IN FRONTIER — FOUR ZONE CLUES REQUIRED';
+ document.getElementById('portalCount').textContent=s.portalCount+' crossings';
+ document.getElementById('portalLog').textContent=s.portalLog.length?s.portalLog.slice(-5).reverse().map(id=>{const g=Object.values(GATES).flat().find(p=>p.id===id);return g?g.site+': '+NAMES[g.to]:'UNKNOWN'}).join(' · '):'No physical portals crossed yet.';
  document.getElementById('signal').textContent=s.zone==='dead'?'SIGNAL: COMPROMISED':'SIGNAL: '+(shardCount()===4?'BREACHED':'STABLE');
  document.querySelectorAll('[data-zone]').forEach(b=>{
   const active=b.dataset.zone===s.zone;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
@@ -79,7 +131,25 @@ function shift(id){
  facing=0;say('REALITY RECONFIGURED // '+NAMES[id],5);hud();save();canvas.focus({preventScroll:true});
 }
 function next(){shift(IDS[(IDS.indexOf(s.zone)+1)%IDS.length])}
+function nearGate(){
+ const a=p(),radius=s.zone==='underworld'?1.15:58;
+ return GATES[s.zone].find(g=>dist(a,g)<radius);
+}
+function traverseGate(g){
+ if(!g||!GATES[s.zone].includes(g))return false;
+ const previous=s.zone;
+ // Return portals are paired but do not teleport automatically. Every hop requires E.
+ s.positions[g.to]={...s.positions[g.to],...g.arrival};
+ if(g.to==='fracture'){s.positions[g.to].vy=0;s.positions[g.to].grounded=true;}
+ s.portalCount=Math.min(999999,s.portalCount+1);
+ s.portalLog.push(g.id);s.portalLog=s.portalLog.slice(-12);
+ shift(g.to);
+ say('THRESHOLD CROSSED // '+NAMES[previous]+' → '+NAMES[g.to]+' / '+g.site,5);
+ return true;
+}
 function interact(){
+ const gate=nearGate();
+ if(gate){traverseGate(gate);return}
  const a=p();
  if(s.zone==='frontier'&&dist(a,{x:738,y:292})<105){
   gain('report','ACCESS CODE RECOVERED // DEAD SECTOR MEDICAL ARCHIVE UNLOCKED');
@@ -160,6 +230,13 @@ function text(t,x,y,size=16,color='#d9ecff',font='monospace'){c.fillStyle=color;
 function circle(x,y,r,color){c.fillStyle=color;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
 function player(x,y,r=13){circle(x,y,r+5,'#244c5f');circle(x,y,r,'#7bedef');circle(x-3,y-4,4,'#e9feff')}
 function marker(x,y,t){const bob=Math.sin(performance.now()/300)*5;circle(x,y+bob,24,'#1d5260');circle(x,y+bob,13,'#50e8ec');text(t,x-20,y-36,12)}
+function renderGate(x,y,g){
+ const active=dist(p(),g)<(s.zone==='underworld'?1.15:58);
+ c.strokeStyle=active?'#bdfcf0':'#48adc2';c.lineWidth=5;
+ c.beginPath();c.ellipse(x,y-11,22,31,0,0,Math.PI*2);c.stroke();
+ rect(x-10,y-20,20,18,active?'#9af4db33':'#4fd7f522');
+ text('E: '+NAMES[g.to],x-47,y-55,11,active?'#dcffed':'#9de9f1');
+}
 function backdrop(color='#111f2d'){
  rect(0,0,W,H,color);
  for(let i=0;i<25;i++)line(0,i*27,W,i*27,'#31506c22');
@@ -178,6 +255,7 @@ function frontier(){
  if(has('vault')){rect(982,307,54,38,'#42c49b');text('OPEN',990,357,12,'#c4ffea');}
  text('L.E.N.Z.',470,34,18,'#7be8ea');
  if(!has('report'))marker(738,292,'E: READ');else circle(738,292,11,'#297365');
+ for(const gate of GATES.frontier)renderGate(gate.x,gate.y,gate);
  player(a.x,a.y);text('FRONTIER // FIELD SURVEY',26,93,18);text('Walk to the cyan terminal. Change reality with Q.',26,119,13,'#b1cfd8');
 }
 function dead(){
@@ -187,6 +265,7 @@ function dead(){
  }
  for(let i=0;i<6;i++){rect(120+i*140,82,67,13,'#682e43');rect(135+i*140,95,27,5,'#f15d6a77')}
  marker(!has('record')?887:-400,204,has('report')?'E: LOG':'LOCKED');
+ for(const gate of GATES.dead)renderGate(gate.x,gate.y,gate);
  circle(enemy.x,enemy.y,22,'#b42a44');circle(enemy.x,enemy.y,10,'#f56a78');
  player(a.x,a.y);
  c.save();rect(0,0,W,H,'#030609e0');c.globalCompositeOperation='destination-out';
@@ -207,6 +286,7 @@ function underworld(){
  const p1=iso(8,3),p2=iso(8,6),a=iso(p().x,p().y);
  if(!s.enemyDown){circle(p1.x,p1.y-8,19,'#79294e');text('SENTINEL',p1.x-42,p1.y-32,11,'#ff93ba')}
  if(!has('crystal'))marker(p2.x,p2.y-15,s.enemyDown?'E: CORE':'SHIELDED');
+ for(const gate of GATES.underworld){const loc=iso(gate.x,gate.y);renderGate(loc.x,loc.y-10,gate);}
  player(a.x,a.y-9);
  text('UNDERWORLD // FAULT-LINE DUNGEON',26,94,17);
  text('Approach sentinel and press SPACE. Recover the crystal.',26,121,13,'#b0bad7');
@@ -222,6 +302,7 @@ function fracture(){
  for(let i=0;i<7;i++){const x=405+i*41;line(x,561,x+15,540,'#f74f6d',4);line(x+15,540,x+28,561,'#f74f6d',4)}
  const a=p();if(!has('platform'))marker(822,318,'E: SHARD');
  rect(1030,482,62,79,'#153e59');rect(1041,495,39,65,'#5bd9e477');
+ for(const gate of GATES.fracture)renderGate(gate.x,gate.y-13,gate);
  player(a.x,a.y-14,14);
  text('THE FRACTURE // HORIZONTAL REALITY',26,94,17);
  text('SPACE to jump. Reach the elevated shard.',26,121,13,'#a9d0e7');
@@ -244,7 +325,26 @@ document.getElementById('interact').addEventListener('click',interact);
 document.getElementById('shift').addEventListener('click',next);
 document.getElementById('touchAction').addEventListener('click',action);
 document.getElementById('touchInteract').addEventListener('click',interact);
-document.getElementById('reset').addEventListener('click',()=>{if(confirm('Reset your local LENZ prototype save?')){s=defaults();enemy={x:860,y:355};save();hud();say('SUBJECT FILE REINITIALIZED')}}); 
+document.getElementById('reset').addEventListener('click',()=>{if(confirm('Reset your local LENZ prototype save?')){s=defaults();enemy={x:860,y:355};save();hud();say('SUBJECT FILE REINITIALIZED')}});
+document.getElementById('export').addEventListener('click',()=>{
+ const blob=new Blob([portableSave()],{type:'application/json'});
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='LENZ-case-001-save.json';document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ say('SAVE ARCHIVE EXPORTED // KEEP THE FILE SOMEWHERE SAFE',4);
+});
+document.getElementById('import').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>SAVE_LIMIT)throw Error('File exceeds 128 KiB limit.');
+  const imported=parsePortableSave(await file.text());
+  if(!confirm('Replace current local LENZ progress with the selected save?'))return;
+  s=imported;enemy={x:860,y:355};keys.clear();facing=0;save();hud();
+  say('SAVE ARCHIVE IMPORTED // CASE '+(has('vault')?'COMPLETE':'ACTIVE'),6);
+ }catch(err){say('IMPORT REJECTED // '+String(err.message).slice(0,62),6)}
+ finally{e.target.value=''}
+});
 window.addEventListener('keydown',e=>{
  const key=e.key.toLowerCase();
  if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(key)&&!(e.target instanceof HTMLButtonElement))e.preventDefault();

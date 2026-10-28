@@ -7,7 +7,7 @@
 
 ## Play the prototype
 
-The GitHub Pages site is deployed at:
+Live browser build (after the PR is merged and Pages redeploys):
 
 **https://michaelwave369.github.io/LENZ/**
 
@@ -36,6 +36,14 @@ Open [XR Laboratory](xr.html) for the separate WebGL preview / native WebXR proo
 The first genre-chain now has consequences: **Frontier's access code** unlocks **Dead Sector's archive**, whose **countercode** allows the **Underworld sentinel** to be defeated. Recover its **stabilizer core** to create the last platform in **The Fracture**. Retrieve the coordinates and return to **Frontier** to open a hidden L.E.N.Z. vault.
 
 The in-game **Case 001** panel tells you what to do next and which evidence is still missing. The corporate vault unlock is the final narrative objective after collecting four zone shards. Saved progress carries across the genres. The VR laboratory remains a separate visual and interaction experiment.
+
+## Threshold Gates and portable progress (v0.3)
+
+Walk up to a cyan oval **threshold gate** and press **E** to cross realities. A paired gate in the destination scene can return you to the same named location. Gates are currently drawn in four 2D scenes: **HOSPITAL** (Frontier ⇄ Dead Sector), **SUBLEVEL** (Dead Sector ⇄ Underworld), **FAULT LINE** (Underworld ⇄ Fracture), and **BREACH** (Fracture ⇄ Frontier). The zone selector, Q and keys 1–4 remain optional developer-friendly shortcuts.
+
+Every physical crossing records an entry in the **Threshold Journal** and counts toward **Gates Crossed**. Gate arrivals are mapped intentionally and all Case 001 evidence persists. This is a spatially linked prototype; it does **not** yet represent seamless shared 3D geometry.
+
+For local-first ownership, **Export Save** downloads `LENZ-case-001-save.json`. **Import Save** accepts a supported versioned JSON archive and asks before replacing the current local save. Malformed files, unsupported versions and saves over 128 KiB are rejected; fields and positions are whitelisted/clamped. Existing local saves are migrated in memory automatically. The XR laboratory still shares the same saved zone but does not yet render the 2D threshold interactions.
 
 ## Architecture
 

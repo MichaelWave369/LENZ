@@ -106,6 +106,16 @@ The XR finale uses the original `flags.vault` completion state from the browser 
 
 **Scope honesty:** This finishes the **first experimental case**, not a full VR adventure, open world, or commercial-quality campaign. It is an aim-and-trigger narrative interaction on static low-poly geometry, without free-roaming enemies, collisions, physical weapons or genuine VR platform jumping. The 3D ending sign is built into WebGL without external font downloads. VR text legibility, rendering performance, portal targeting and controller behavior still require actual Quest 3 playtesting. Saves sync automatically only within the same browser origin/profile; transfer between devices using Export/Import.
 
+## Case 001 Field Test Lab (v0.10)
+
+Use **[Field Test Lab](qa.html)** to run a structured, twelve-step acceptance test in an actual Quest 3 headset or on desktop. The page reads a **sanitized, read-only** overview of local Case 001 saved evidence without altering the game. It separately records manual Pass / Fail / Blocked / Not Tested outcomes, optional notes and a tester-chosen device category. These answers are never inferred from the save: a green game flag is not proof that Quest hardware works.
+
+A single **Export Report** action downloads a local JSON file with the checklist outcomes and sanitized milestone booleans. Nothing is submitted automatically, and no raw save data, account ID, user agent, headset pose or IP address is included. User-written notes are included in the file, so review them before sharing. Clearing QA answers does **not** reset the game.
+
+The [XR Lab](xr.html) now has an explicitly **opt-in** checkbox to sample up to 2,400 recent frame intervals from one immersive session and save an aggregate summary (approximate callback FPS, p95 interval and count above 20ms). It is off by default. These are diagnostics, **not validated Quest frame rate or comfort certification**.
+
+A complete [Playtest Protocol](docs/PLAYTEST_PROTOCOL.md) describes the actual headset route, negative tests, issue priorities and the physical-device release gate. The full Case 001 story is implemented in prototype form, but the Quest 3 experience has not yet been validated on hardware.
+
 ## Architecture
 
 A dependency-free, static HTML/JavaScript prototype. No third-party runtime, account, tracking, remote resources or server requirement. GitHub Actions runs JavaScript syntax and static smoke tests. A separate workflow deploys the static site to GitHub Pages after merging to main and enabling **Settings → Pages → Source: GitHub Actions**.

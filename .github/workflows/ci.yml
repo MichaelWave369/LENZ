@@ -22,6 +22,8 @@ jobs:
           node --check src/xr-fracture.js
           node --check src/xr-vault.js
           node --check src/xr-glyphs.js
+          node --check src/qa-core.js
+          node --check src/qa.js
           node --check src/xr-gates.js
           node --check src/xr.js
       - name: Run dependency-free tests

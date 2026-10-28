@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.4)
+# LENZ — Game Bible (living v0.5)
 
 > **One world. Infinite perspectives.**
 
@@ -71,6 +71,14 @@ The stationary VR laboratory now offers two visibly separate low-poly, numbered 
 **Safety and comfort:** The view remains headset-tracked, no camera automation or locomotion. If a controller cannot provide a ray, no portal is silently selected. Point-and-click desktop fallback is provided. Device support and performance need real Quest 3 testing.
 
 **Data locality:** Web storage is shared across pages on the same origin and browser profile only. On separate devices, import/export the saved JSON manually.
+
+## First immersive playable objective (v0.5)
+
+**Frontier 3D terminal:** A marked console between the two existing gates is the first headset interaction tied to a campaign consequence. A controller ray must intersect the visible console to recover `flags.report`. This is the same clue the 2D game uses to unlock Dead Sector, so it can be earned in either presentation without duplicate rewards.
+
+**Comfort traversal:** The same controller can aim at a bounded floor plane, displaying a still cyan preview square and, on trigger, relocating by a WebXR reference-space offset. Headset pose tracking and player-chosen orientation are preserved; there is no scripted camera tween, artificial acceleration or forced turning. The player must observe real-world boundaries; virtual geometry does not constitute a collision or safety system.
+
+**Scope honesty:** This is a limited interactive 3D slice, not the full campaign or fully immersive open world. Quest 3 test results are not claimed until an actual device playtest is documented.
 
 ## First prototype's scope (v0.1)
 

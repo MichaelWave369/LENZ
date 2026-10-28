@@ -1,10 +1,11 @@
 // LENZ v0.4 immersive VR bridge: stationary 3D reality gates with shared Case 001 state.
 import {KEY,IDS,NAMES,ROUTES,GATE_CENTERS,currentZone,readXRSave,persistXRTravel,targetGate} from './xr-gates.js';
+import {TERMINAL,raySphere,floorTarget,scanFrontierReport,teleportOffset} from './xr-play.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
-const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),label=document.getElementById('zone');
+const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
 let zone=currentZone(readXRSave(localStorage)),session=null,referenceSpace=null,program,loc={},cubeBuffer;
-let highlightedGate=-1;
+let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,lastXRInput=null;
 function updateLabel(){
  label.textContent='EXPERIENCE: '+NAMES[zone];
  const routes=ROUTES[zone];
@@ -12,11 +13,23 @@ function updateLabel(){
  rightButton.textContent='RIGHT GATE / '+routes[1].site+' → '+NAMES[routes[1].to];
  const save=readXRSave(localStorage);
  const flags=save.flags&&typeof save.flags==='object'?save.flags:{};
+ scanButton.disabled=zone!=='frontier'||flags.report===true;
+ scanButton.textContent=flags.report===true?'FRONTIER REPORT RECOVERED':'SCAN FRONTIER TERMINAL';
  const found=['report','record','crystal','platform'].filter(k=>flags[k]===true).length;
  document.getElementById('caseState').textContent='SHARDS '+found+'/4 · '+(flags.vault===true?'CASE 001 COMPLETE':'CORPORATE VAULT SEALED')+' · '+(save.portalCount||0)+' GATE CROSSINGS';
  document.getElementById('xrJournal').textContent=(save.portalLog||[]).slice(-5).reverse().join(' · ')||'NO THRESHOLDS RECORDED';
  status.textContent='ACTIVE LENS // '+NAMES[zone]+' // '+(session?'AIM AND PRESS CONTROLLER TRIGGER':'DESKTOP PREVIEW');
 }
+function scanTerminal(){
+ try{
+  const previous=readXRSave(localStorage);
+  const result=scanFrontierReport({...previous,zone});
+  if(result.changed)localStorage.setItem(KEY,JSON.stringify(result.state));
+  updateLabel();status.textContent=result.reason;
+  return result.changed;
+ }catch(err){status.textContent='EVIDENCE ERROR // '+String(err?.message||err).slice(0,100);return false}
+}
+scanButton.addEventListener('click',scanTerminal);
 function traverse(index){
  try{
   const state=persistXRTravel(localStorage,zone,index);
@@ -28,16 +41,35 @@ function traverse(index){
  }
 }
 function changeZone(event){
- // WebXR select receives an inputSource ray with an actual headset-space hit test.
- // Desktop buttons pass an explicit gate index; no invisible default headset cycling.
- if(event&&typeof event==='object'){
-  const frame=event.frame,space=event.inputSource?.targetRaySpace;
-  const pose=frame&&space&&referenceSpace?frame.getPose(space,referenceSpace):null;
-  const which=pose?targetGate(pose.transform.position,pose.transform.orientation):-1;
-  if(which<0){status.textContent='AIM CONTROLLER AT A GLOWING GATE BEFORE PRESSING TRIGGER';return false}
-  return traverse(which);
- }
+ // Target precedence: portal > Frontier clue > floor teleport.
+ // No trigger does anything unless the controller ray actually hits a target.
+ if(!event||!referenceSpace)return false;
+ const frame=event.frame,space=event.inputSource?.targetRaySpace;
+ const pose=frame&&space?frame.getPose(space,referenceSpace):null;
+ if(!pose){status.textContent='NO CONTROLLER TARGET RAY AVAILABLE';return false}
+ const origin=pose.transform.position,orientation=pose.transform.orientation;
+ const which=targetGate(origin,orientation);
+ if(which>=0)return traverse(which);
+ if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null)return scanTerminal();
+ const floor=floorTarget(origin,orientation);
+ if(floor)return teleportTo(floor,frame);
+ status.textContent='AIM AT A GATE, THE FRONTIER TERMINAL, OR THE FLOOR';
  return false;
+}
+function teleportTo(target,frame){
+ if(!referenceSpace||!frame)return false;
+ const viewer=frame.getViewerPose(referenceSpace)?.transform?.position;
+ const delta=teleportOffset(viewer,target);
+ if(!delta){status.textContent='TELEPORT OUT OF RANGE';return false}
+ if(typeof XRRigidTransform==='undefined'){
+  status.textContent='VR REFERENCE SPACE OFFSET UNAVAILABLE';return false
+ }
+ try{
+  referenceSpace=referenceSpace.getOffsetReferenceSpace(new XRRigidTransform(delta));
+  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;
+  status.textContent='TELEPORT COMPLETE // AIM AT GATE, TERMINAL OR FLOOR';
+  return true;
+ }catch(err){status.textContent='TELEPORT FAILED // '+String(err?.message||err).slice(0,90);return false}
 }
 leftButton.addEventListener('click',()=>traverse(0));
 rightButton.addEventListener('click',()=>traverse(1));
@@ -113,6 +145,9 @@ function scene(){
    box(x,h-.05,z,.5,.09,.55,C.ice);
   }
   box(0,.7,-5.45,.6,1.4,.6,C.green);
+  // An interactable scan console, placed between the two portal openings.
+  box(0,1.13,-5.06,.68,.45,.14,terminalHighlighted?C.pale:C.ice);
+  box(0,1.53,-5.04,.46,.06,.15,C.gold);
  }else if(zone==='dead'){
   for(let i=0;i<5;i++){
    const z=-5.1-i*1.75;
@@ -134,6 +169,11 @@ function scene(){
  }
  // Near-space apparatus makes the room feel physically grounded.
  box(-2.6,.65,-1.8,.46,1.3,.44,C.stone);box(2.6,.65,-1.8,.46,1.3,.44,C.stone);
+ if(teleportPreview){
+  // No flashing, animations or camera movement: a stable ground marker.
+  box(teleportPreview.x,-.035,teleportPreview.z,.36,.025,.36,C.ice);
+  box(teleportPreview.x,-.018,teleportPreview.z,.12,.027,.12,C.green);
+ }
  box(-2.6,1.36,-1.8,.3,.1,.3,accent);box(2.6,1.36,-1.8,.3,.1,.3,accent);
 }
 function render(projection,view){
@@ -163,12 +203,16 @@ function preview(){
 function immersiveFrame(time,frame){
  if(!session)return;session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
- highlightedGate=-1;
+ highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;
  for(const source of session.inputSources||[]){
   const ray=frame.getPose(source.targetRaySpace,referenceSpace);
   if(!ray)continue;
-  highlightedGate=targetGate(ray.transform.position,ray.transform.orientation);
+  const origin=ray.transform.position,orientation=ray.transform.orientation;
+  highlightedGate=targetGate(origin,orientation);
   if(highlightedGate!==-1)break;
+  if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null){terminalHighlighted=true;break}
+  teleportPreview=floorTarget(origin,orientation);
+  if(teleportPreview)break;
  }
  const layer=session.renderState.baseLayer;
  gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);clear();
@@ -182,7 +226,7 @@ async function enterXR(){
   enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
-   session=null;referenceSpace=null;highlightedGate=-1;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
+   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
   xr.updateRenderState({baseLayer:new XRWebGLLayer(xr,gl,{alpha:false,depth:true})});
@@ -197,7 +241,7 @@ async function enterXR(){
 enter.addEventListener('click',enterXR);
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
- enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;
+ enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;
 }else{
  try{init();requestAnimationFrame(preview);updateLabel();
   if(navigator.xr){
@@ -206,5 +250,5 @@ if(!gl){
     if(!supported)status.textContent='DESKTOP PREVIEW ONLY // OPEN THIS HTTPS PAGE IN A COMPATIBLE HEADSET BROWSER';
    }).catch(()=>{enter.textContent='IMMERSIVE VR NOT AVAILABLE'});
   }else{enter.textContent='IMMERSIVE VR NOT AVAILABLE';status.textContent='WEBXR NOT EXPOSED IN THIS BROWSER // DESKTOP PREVIEW ONLY'}
- }catch(err){status.textContent='GRAPHICS ERROR: '+err.message;enter.textContent='GRAPHICS ERROR';leftButton.disabled=true;rightButton.disabled=true}
+ }catch(err){status.textContent='GRAPHICS ERROR: '+err.message;enter.textContent='GRAPHICS ERROR';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true}
 }

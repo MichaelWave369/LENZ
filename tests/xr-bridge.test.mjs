@@ -86,7 +86,7 @@ test('legacy, corrupt and absent saves are handled conservatively',()=>{
 });
 test('XR interaction is intentional and linked to the shared case display',()=>{
  assert.match(xrCode,/session\.addEventListener\('select',changeZone\)/);
- assert.match(xrCode,/targetGate\(pose\.transform\.position,pose\.transform\.orientation\)/);
+ assert.match(xrCode,/const which=targetGate\(origin,orientation\)/);
  assert.match(xrCode,/persistXRTravel\(localStorage,zone,index\)/);
  assert.doesNotMatch(xrCode,/session\.addEventListener\('select',\s*\(\)\s*=>\s*next/);
  for(const id of ['leftGate','rightGate','caseState','xrJournal'])assert.ok(xrHtml.includes('id="'+id+'"'),id+' missing');

@@ -53,6 +53,14 @@ The XR scene also displays your persistent Case 001 shard count, vault status an
 
 **Honest scope:** The headset scene is still a **stationary, low-poly 3D laboratory**. It does not yet offer free-roaming VR movement, 3D inventory/combat, physical clue manipulation, shared scene meshes or completed Quest 3 user testing. Progress synchronizes only between the **same browser origin and browser profile**. Use export/import on the 2D page to transfer between a PC and Quest; no cloud sync has been added.
 
+## XR playable objective and comfort teleport (v0.5)
+
+The [XR Laboratory](xr.html) now includes a first **genuine world interaction**. In **Frontier**, point a VR controller at the glowing central terminal and pull its trigger to retrieve the existing **Case 001 access-code report**. The report is saved in the same `flags.report` field used by the 2D campaign and enables the Dead Sector medical archive there. Repeat scans do not duplicate the reward. A desktop **Scan Frontier Terminal** button is available for a browser smoke test.
+
+**VR navigation:** Point your controller down toward the floor inside the marked simulation bounds. A stable cyan marker previews a valid destination; pull the trigger to teleport there. This is a **bounded, instantaneous reference-space repositioning**: no smooth artificial movement or camera rotation. Looking around and walking physically within your real, safe play area remain supported through normal headset tracking. Aim and trigger also selects either 3D gate or the evidence console. Interaction precedence is **gate → console → floor** to avoid accidental navigation while interacting.
+
+**Limitations:** Quest 3 comfort, controller hardware, floor hit accuracy and reference-space offsets still need on-device confirmation. The laboratory is still a modest low-poly 3D demonstration, **not** full open-world VR, physical grabbing, combat or a 3D conversion of all Case 001 quests. There is no collision system; never rely on virtual geometry as a real-world safety boundary. Old saves remain compatible. No cloud services or analytics have been added.
+
 ## Architecture
 
 A dependency-free, static HTML/JavaScript prototype. No third-party runtime, account, tracking, remote resources or server requirement. GitHub Actions runs JavaScript syntax and static smoke tests. A separate workflow deploys the static site to GitHub Pages after merging to main and enabling **Settings → Pages → Source: GitHub Actions**.

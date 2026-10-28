@@ -126,6 +126,20 @@
 
 **Milestone gate:** A first-time tester can finish Case 001 inside the headset while understanding both the genre transitions and the final directive. Automated CI tests alone cannot establish this.
 
+## Milestone 1I: Field Test Lab and physical Quest validation (v0.10)
+
+- [x] Separate manual 12-step QA checklist from automatic local game flags
+- [x] Read-only, sanitized Case 001 evidence dashboard
+- [x] Explicitly opt-in bounded XR callback timing samples
+- [x] Local-only exportable report with no account IDs, poses or raw save
+- [x] Capability probes (secure context, WebGL, immersive-VR support)
+- [x] Playtest protocol and bug severity triage
+- [x] Unit tests for reports, sanitization, no network requests and optional metrics
+- [ ] Complete a full Quest 3 hardware playthrough to the vault
+- [ ] Confirm readable in-headset text, stable controller aim and comfortable teleport
+- [ ] Test save export/import between PC and Quest 3 profiles
+- [ ] Address P0/P1 device findings before calling the experience headset-ready
+
 ## Milestone 2: Expand immersive play
 
 - Quest 3 WebXR input mappings with hand/controller selection

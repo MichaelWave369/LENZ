@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.5)
+# LENZ — Game Bible (living v0.6)
 
 > **One world. Infinite perspectives.**
 
@@ -79,6 +79,14 @@ The stationary VR laboratory now offers two visibly separate low-poly, numbered 
 **Comfort traversal:** The same controller can aim at a bounded floor plane, displaying a still cyan preview square and, on trigger, relocating by a WebXR reference-space offset. Headset pose tracking and player-chosen orientation are preserved; there is no scripted camera tween, artificial acceleration or forced turning. The player must observe real-world boundaries; virtual geometry does not constitute a collision or safety system.
 
 **Scope honesty:** This is a limited interactive 3D slice, not the full campaign or fully immersive open world. Quest 3 test results are not claimed until an actual device playtest is documented.
+
+## Hospital security and Case 001 medical archive (v0.6)
+
+The first **two-scene VR quest chain** is functional. Frontier provides the code. Dead Sector's separately targeted red breaker powers its medical archive. The archive awards the existing Case 001 medical record, whose sentinel countercode changes the 2D Underworld's available combat outcomes. Both breaker's state (`deadPower`) and recovered record (`record`) are durable in the shared save, and duplicate interactions do not award duplicate rewards.
+
+The 2D medical archive still requires only the Frontier code, because it represents an abstracted interaction; completing it also marks hospital power restored. Old saves with `record` imply `deadPower` when loaded. The VR puzzle adds meaningful physical interaction without breaking earlier 2D gameplay.
+
+**Deliberate omissions:** No artificially moving horror enemy, headset-controlled weapon, jumpscare or forced camera motion has been included. Headset testing is an open acceptance criterion. A low-poly corridor and two consoles do not constitute a finished Resident Evil-style horror sequence.
 
 ## First prototype's scope (v0.1)
 

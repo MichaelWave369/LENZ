@@ -1,22 +1,47 @@
-// LENZ WebXR stationary prototype. Native WebGL/WebXR, no CDN or engine dependency.
+// LENZ v0.4 immersive VR bridge: stationary 3D reality gates with shared Case 001 state.
+import {KEY,IDS,NAMES,ROUTES,GATE_CENTERS,currentZone,readXRSave,persistXRTravel,targetGate} from './xr-gates.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
-const enter=document.getElementById('enter'),cycle=document.getElementById('cycle'),label=document.getElementById('zone');
+const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
-const KEY='lenz-poc-v1',IDS=['frontier','dead','underworld','fracture'];
-const NAMES={frontier:'FRONTIER',dead:'DEAD SECTOR',underworld:'UNDERWORLD',fracture:'THE FRACTURE'};
-let zone='frontier',session=null,referenceSpace=null,program,loc={},cubeBuffer;
-try{const saved=JSON.parse(localStorage.getItem(KEY));if(IDS.includes(saved?.zone))zone=saved.zone}catch{}
-function persist(){
- try{
- const raw=JSON.parse(localStorage.getItem(KEY))||{};
- raw.zone=zone;raw.visited=Array.isArray(raw.visited)?raw.visited.filter(id=>IDS.includes(id)):[];
- if(!raw.visited.includes(zone))raw.visited.push(zone);
- localStorage.setItem(KEY,JSON.stringify(raw));
- }catch{}
+let zone=currentZone(readXRSave(localStorage)),session=null,referenceSpace=null,program,loc={},cubeBuffer;
+let highlightedGate=-1;
+function updateLabel(){
+ label.textContent='EXPERIENCE: '+NAMES[zone];
+ const routes=ROUTES[zone];
+ leftButton.textContent='LEFT GATE / '+routes[0].site+' → '+NAMES[routes[0].to];
+ rightButton.textContent='RIGHT GATE / '+routes[1].site+' → '+NAMES[routes[1].to];
+ const save=readXRSave(localStorage);
+ const flags=save.flags&&typeof save.flags==='object'?save.flags:{};
+ const found=['report','record','crystal','platform'].filter(k=>flags[k]===true).length;
+ document.getElementById('caseState').textContent='SHARDS '+found+'/4 · '+(flags.vault===true?'CASE 001 COMPLETE':'CORPORATE VAULT SEALED')+' · '+(save.portalCount||0)+' GATE CROSSINGS';
+ document.getElementById('xrJournal').textContent=(save.portalLog||[]).slice(-5).reverse().join(' · ')||'NO THRESHOLDS RECORDED';
+ status.textContent='ACTIVE LENS // '+NAMES[zone]+' // '+(session?'AIM AND PRESS CONTROLLER TRIGGER':'DESKTOP PREVIEW');
 }
-function updateLabel(){label.textContent='EXPERIENCE: '+NAMES[zone];status.textContent='ACTIVE LENS // '+NAMES[zone]+' // '+(session?'TRIGGER TO SHIFT':'DESKTOP PREVIEW')}
-function changeZone(){zone=IDS[(IDS.indexOf(zone)+1)%IDS.length];persist();updateLabel()}
-cycle.addEventListener('click',changeZone);
+function traverse(index){
+ try{
+  const state=persistXRTravel(localStorage,zone,index);
+  if(!state)return false;
+  zone=currentZone(state);highlightedGate=-1;updateLabel();
+  return true;
+ }catch(err){
+  status.textContent='SAVE ERROR // '+String(err?.message||err).slice(0,120);return false;
+ }
+}
+function changeZone(event){
+ // WebXR select receives an inputSource ray with an actual headset-space hit test.
+ // Desktop buttons pass an explicit gate index; no invisible default headset cycling.
+ if(event&&typeof event==='object'){
+  const frame=event.frame,space=event.inputSource?.targetRaySpace;
+  const pose=frame&&space&&referenceSpace?frame.getPose(space,referenceSpace):null;
+  const which=pose?targetGate(pose.transform.position,pose.transform.orientation):-1;
+  if(which<0){status.textContent='AIM CONTROLLER AT A GLOWING GATE BEFORE PRESSING TRIGGER';return false}
+  return traverse(which);
+ }
+ return false;
+}
+leftButton.addEventListener('click',()=>traverse(0));
+rightButton.addEventListener('click',()=>traverse(1));
+
 function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
 function init(){
  const vs=compile(gl.VERTEX_SHADER,
@@ -48,14 +73,37 @@ function box(x,y,z,sx,sy,sz,color){
  gl.drawArrays(gl.TRIANGLES,0,36);
 }
 const C={blue:[.14,.42,.58],ice:[.28,.89,.95],pale:[.62,.87,.88],floor:[.10,.22,.27],dark:[.10,.13,.20],red:[.9,.19,.31],hot:[1,.42,.45],gold:[.94,.62,.24],purple:[.46,.31,.68],stone:[.24,.30,.44],green:[.27,.66,.48]};
+const DIGITS={1:[1,2],2:[0,1,3,4,6],3:[0,1,2,3,6],4:[1,2,5,6]};
+function drawDigit(x,y,z,n,color){
+ const segments=[
+  [0,.32,.47,.055],  // top
+  [.25,.15,.05,.30], // upper right
+  [.25,-.20,.05,.30],// lower right
+  [0,-.37,.47,.055], // bottom
+  [-.25,-.20,.05,.30],// lower left
+  [-.25,.15,.05,.30],// upper left
+  [0,-.02,.47,.055]  // middle
+ ];
+ for(const id of DIGITS[n]||[]){
+  const [dx,dy,w,h]=segments[id];
+  box(x+dx,y+dy,z,w,h,.04,color);
+ }
+}
 function scene(){
  box(0,-.18,-5,18,.28,24,C.floor);
- // The portal itself stays fixed in world space. Headset motion is never overridden.
+ // Both portals occupy stable physical positions: no scripted headset movement.
  const accent=zone==='dead'?C.red:zone==='underworld'?C.purple:zone==='fracture'?C.gold:C.ice;
- box(-1.32,1.42,-3.7,.23,2.9,.3,accent);box(1.32,1.42,-3.7,.23,2.9,.3,accent);
- box(0,2.77,-3.7,2.88,.23,.3,accent);
- box(0,.04,-3.7,2.9,.1,.5,accent);
- box(0,1.3,-3.86,2.3,2.5,.075,zone==='dead'?[.09,.025,.06]:[.045,.13,.20]);
+ for(let i=0;i<2;i++){
+  const route=ROUTES[zone][i],x=GATE_CENTERS[i],active=i===highlightedGate;
+  const color=active?C.pale:route.to==='dead'?C.red:route.to==='underworld'?C.purple:route.to==='fracture'?C.gold:C.ice;
+  box(x-.64,1.34,-3.7,.13,2.55,.25,color);
+  box(x+.64,1.34,-3.7,.13,2.55,.25,color);
+  box(x,2.58,-3.7,1.38,.16,.25,color);
+  box(x,.09,-3.7,1.38,.13,.3,color);
+  box(x,2.82,-3.7,.85,.06,.24,C.stone);
+  drawDigit(x,2.86,-3.59,IDS.indexOf(route.to)+1,color);
+  // Gates have no opaque center, so the environment remains visible through them.
+ }
  // Four distinctive representations of an Experience Zone.
  if(zone==='frontier'){
   box(0,-.06,-6,2.25,.04,5,[.26,.29,.32]);
@@ -115,6 +163,13 @@ function preview(){
 function immersiveFrame(time,frame){
  if(!session)return;session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
+ highlightedGate=-1;
+ for(const source of session.inputSources||[]){
+  const ray=frame.getPose(source.targetRaySpace,referenceSpace);
+  if(!ray)continue;
+  highlightedGate=targetGate(ray.transform.position,ray.transform.orientation);
+  if(highlightedGate!==-1)break;
+ }
  const layer=session.renderState.baseLayer;
  gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);clear();
  for(const view of pose.views){
@@ -127,7 +182,7 @@ async function enterXR(){
   enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
-   session=null;referenceSpace=null;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
+   session=null;referenceSpace=null;highlightedGate=-1;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
   xr.updateRenderState({baseLayer:new XRWebGLLayer(xr,gl,{alpha:false,depth:true})});
@@ -142,7 +197,7 @@ async function enterXR(){
 enter.addEventListener('click',enterXR);
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
- enter.textContent='WEBGL REQUIRED';cycle.disabled=true;
+ enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;
 }else{
  try{init();requestAnimationFrame(preview);updateLabel();
   if(navigator.xr){
@@ -151,5 +206,5 @@ if(!gl){
     if(!supported)status.textContent='DESKTOP PREVIEW ONLY // OPEN THIS HTTPS PAGE IN A COMPATIBLE HEADSET BROWSER';
    }).catch(()=>{enter.textContent='IMMERSIVE VR NOT AVAILABLE'});
   }else{enter.textContent='IMMERSIVE VR NOT AVAILABLE';status.textContent='WEBXR NOT EXPOSED IN THIS BROWSER // DESKTOP PREVIEW ONLY'}
- }catch(err){status.textContent='GRAPHICS ERROR: '+err.message;enter.textContent='GRAPHICS ERROR';cycle.disabled=true}
+ }catch(err){status.textContent='GRAPHICS ERROR: '+err.message;enter.textContent='GRAPHICS ERROR';leftButton.disabled=true;rightButton.disabled=true}
 }

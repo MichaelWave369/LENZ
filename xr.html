@@ -20,7 +20,8 @@ button.active-node{border-color:#ffc578;background:#524225;color:#fff2d8}
 @media(max-width:670px){.grid{grid-template-columns:1fr}}
 </style></head><body>
 <div class="wrap">
-<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.9 // Case 001 complete across four immersive realities</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
+<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.10 // Case 001 field testing</p></div>
+ <nav aria-label="Lab navigation"><a class="link" href="index.html">← BACK TO GAME</a> <a class="link" href="qa.html">FIELD TEST LAB</a></nav></header>
 <section class="frame">
  <div class="frame-head"><span id="zone">EXPERIENCE: FRONTIER</span><span>WEBXR IMMERSIVE-VR EXPERIMENT</span></div>
  <canvas id="scene" width="960" height="540" aria-label="3D LENZ world preview with two distinctly numbered portal gates. Their destinations and site names are shown directly below."></canvas>
@@ -45,6 +46,12 @@ button.active-node{border-color:#ffc578;background:#524225;color:#fff2d8}
  </div>
 </section>
 <div id="status" role="status" aria-live="polite">INITIALIZING GRAPHICS</div>
+<div class="case" aria-labelledby="diagnosticsTitle">
+ <b id="diagnosticsTitle" class="micro">OPTIONAL XR PERFORMANCE SAMPLE</b>
+ <p><label><input id="collectXrMetrics" type="checkbox"> Record aggregate frame intervals during my next immersive session</label></p>
+ <p id="xrMetricsStatus" role="status" aria-live="polite">Sampling is off. No performance measurements are saved by default.</p>
+ <p>Opt-in collects only a bounded summary of frame timing: approximate callback FPS, 95th-percentile interval, and slow-frame count. No headset pose, camera, personal data, full recording or network upload. View/export the last summary in the <a href="qa.html">Field Test Lab</a>.</p>
+</div>
 <div class="case" aria-labelledby="vaultTitle">
  <b class="micro" id="vaultTitle">CASE 001 // FRONTIER CORPORATE VAULT</b>
  <p id="vaultStatus" role="status" aria-live="polite">LOADING VAULT SECURITY STATUS</p>

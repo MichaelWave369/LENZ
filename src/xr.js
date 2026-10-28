@@ -6,7 +6,36 @@ import {CONDUITS,CORE,PULSE_ORDER,phaseOf,activeConduit,pulseConduit,recoverDung
 import {ANCHORS,COORDINATES,STABILIZATION_ORDER,fracturePhase,activeAnchor,stabilizeAnchor,collectVaultCoordinates} from './xr-fracture.js';
 import {VAULT_DECODER,VAULT_DOOR,DIRECTIVE,clueCount,vaultUnlocked,decodeVault,openVault} from './xr-vault.js';
 import {geometryForMessage} from './xr-glyphs.js';
+import {XR_METRICS_KEY,summarizeFrameDeltas,safeXRMetrics,readJSON} from './qa-core.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
+const collectXrMetrics=document.getElementById('collectXrMetrics'),xrMetricsStatus=document.getElementById('xrMetricsStatus');
+let metricsEnabled=false,previousXrFrameTime=null,frameIntervals=[];
+function displayLastMetrics(){
+ const data=safeXRMetrics(readJSON(localStorage,XR_METRICS_KEY));
+ xrMetricsStatus.textContent=data
+  ? 'LAST OPTED-IN SESSION // ~'+data.approximateFps+' callback FPS · p95 '+data.p95FrameMs+' ms · '+data.sampledFrames+' sampled intervals'
+  : 'Sampling is off. No performance measurements are saved by default.';
+}
+function sampleXRFrame(time){
+ if(!metricsEnabled||!Number.isFinite(time))return;
+ if(previousXrFrameTime!==null&&frameIntervals.length<2400){
+  const dt=time-previousXrFrameTime;
+  if(Number.isFinite(dt)&&dt>=2&&dt<=250)frameIntervals.push(dt);
+ }
+ previousXrFrameTime=time;
+}
+function finishXRMetrics(){
+ if(!metricsEnabled)return;
+ const aggregate=summarizeFrameDeltas(frameIntervals);
+ metricsEnabled=false;previousXrFrameTime=null;frameIntervals=[];
+ collectXrMetrics.checked=false;
+ if(aggregate){
+  try{localStorage.setItem(XR_METRICS_KEY,JSON.stringify(aggregate));displayLastMetrics()}
+  catch{xrMetricsStatus.textContent='SAMPLE COMPLETE, BUT LOCAL STORAGE WAS UNAVAILABLE';}
+ }else{
+  xrMetricsStatus.textContent='TOO FEW XR FRAMES TO SUMMARIZE // NOTHING WAS SAVED';
+ }
+}
 const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),coreButton=document.getElementById('underworldCore'),conduitButtons=[0,1,2].map(i=>document.getElementById('sentinelNode'+i)),anchorButtons=[0,1,2].map(i=>document.getElementById('fractureAnchor'+i)),coordinatesButton=document.getElementById('fractureCoordinates'),decoderButton=document.getElementById('vaultDecode'),vaultButton=document.getElementById('vaultOpen'),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
 let messageProgram=null,messageBuffer=null,messageVertexCount=0,messageUniforms={};
@@ -404,7 +433,9 @@ function preview(){
  requestAnimationFrame(preview);
 }
 function immersiveFrame(time,frame){
- if(!session)return;session.requestAnimationFrame(immersiveFrame);
+ if(!session)return;
+ sampleXRFrame(time);
+ session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
  highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;vaultTarget=null;
  for(const source of session.inputSources||[]){
@@ -442,9 +473,12 @@ function immersiveFrame(time,frame){
 }
 async function enterXR(){
  try{
-  enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
+  enter.disabled=true;
+  metricsEnabled=collectXrMetrics.checked;previousXrFrameTime=null;frameIntervals=[];
+  const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
+   finishXRMetrics();
    session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;vaultTarget=null;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
@@ -453,11 +487,13 @@ async function enterXR(){
   updateLabel();xr.requestAnimationFrame(immersiveFrame);
  }catch(err){
   status.textContent='IMMERSIVE VR COULD NOT START: '+(err?.message||String(err));
+  metricsEnabled=false;previousXrFrameTime=null;frameIntervals=[];
   if(session){try{await session.end()}catch{}session=null}
   enter.disabled=false;
  }
 }
 enter.addEventListener('click',enterXR);
+displayLastMetrics();
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
  enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;coreButton.disabled=true;conduitButtons.forEach(b=>b.disabled=true);coordinatesButton.disabled=true;anchorButtons.forEach(b=>b.disabled=true);decoderButton.disabled=true;vaultButton.disabled=true;

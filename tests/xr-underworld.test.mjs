@@ -11,7 +11,12 @@ const base=()=>({zone:'underworld',health:88,flags:{report:true,deadPower:true,r
  visited:['frontier','dead','underworld'],positions:{underworld:{x:8,y:3}},portalLog:['hospital-in','sublevel-in'],portalCount:2,
  enemyDown:false,sentinelPhase:0});
 const yaw=n=>({x:0,y:Math.sin(n/2),z:0,w:Math.cos(n/2)});
-const pitch=n=>({x:Math.sin(n/2),y:0,z:0,w:Math.cos(n/2)});
+function aim(from,to){
+ const dx=to.x-from.x,dy=to.y-from.y,dz=to.z-from.z;
+ const y=-Math.atan2(dx,-dz)/2,p=Math.atan2(dy,Math.hypot(dx,dz))/2;
+ const cy=Math.cos(y),sy=Math.sin(y),cp=Math.cos(p),sp=Math.sin(p);
+ return {x:cy*sp,y:sy*cp,z:-sy*sp,w:cy*cp};
+}
 function harness(memory=new Map()){
  const els=new Map();
  const get=id=>{
@@ -87,11 +92,7 @@ test('independent controller rays can aim at left, center and right nodes',()=>{
  const origin={x:0,y:1.2,z:0};
  assert.equal(CONDUITS.length,3);
  for(const node of CONDUITS){
-  const xAngle=Math.atan2(-node.x,-node.z);
-  const yAngle=-Math.atan2(node.y-origin.y,Math.hypot(node.x,node.z));
-  // Quaternion rotations around Y and X can be composed; the small elevation
-  // differences are inside the sphere radius, so yaw-only test is sufficient.
-  assert.notEqual(raySphere(origin,yaw(xAngle),node),null,'must hit '+node.id);
+  assert.notEqual(raySphere(origin,aim(origin,node),node),null,'must hit '+node.id);
  }
  assert.equal(raySphere(origin,yaw(1.4),CONDUITS[0]),null);
  assert.notEqual(raySphere({x:0,y:.79,z:0},yaw(0),CORE),null);

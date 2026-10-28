@@ -51,7 +51,7 @@ const SAVE_KIND='LENZ_CASE_SAVE';
 const SAVE_VERSION=1;
 const SAVE_LIMIT=131072;
 const defaults=()=>({
- zone:'frontier',health:100,flags:{},visited:['frontier'],portalCount:0,portalLog:[],sentinelPhase:0,
+ zone:'frontier',health:100,flags:{},visited:['frontier'],portalCount:0,portalLog:[],sentinelPhase:0,fracturePhase:0,
  positions:{frontier:{x:160,y:355},dead:{x:125,y:370},underworld:{x:1,y:6},fracture:{x:100,y:560,vy:0}},
  enemyDown:false
 });
@@ -70,6 +70,8 @@ function normalizeState(raw){
  const stage=Number(raw.sentinelPhase);
  d.sentinelPhase=d.enemyDown?3:Number.isInteger(stage)&&stage>=0&&stage<=3?stage:0;
  if(d.sentinelPhase===3)d.enemyDown=true;
+ const bridge=Number(raw.fracturePhase);
+ d.fracturePhase=d.flags.platform===true?3:Number.isInteger(bridge)&&bridge>=0&&bridge<=3?bridge:0;
  for(const id of IDS){
   const v=raw.positions?.[id],b=d.positions[id];
   if(v&&Number.isFinite(v.x)&&Number.isFinite(v.y)){
@@ -109,7 +111,9 @@ function shardCount(){return ['report','record','crystal','platform'].filter(has
 function say(msg,seconds=4){notice=msg;noticeUntil=performance.now()+seconds*1000;document.getElementById('ticker').textContent=msg}
 function gain(id,msg){
  if(has(id)){say('DATA ALREADY RECOVERED');return}
- s.flags[id]=true;s.health=Math.min(100,s.health+10);
+ s.flags[id]=true;
+ if(id==='platform')s.fracturePhase=3;
+ s.health=Math.min(100,s.health+10);
  say(msg,6);save();hud();
  if(shardCount()===4)say('SUBJECT STATUS: REVOKED // FOUR ZONES BREACHED',12);
 }

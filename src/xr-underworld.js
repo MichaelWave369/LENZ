@@ -15,7 +15,8 @@ const safeFlags=state=>isObject(state?.flags)?state.flags:{};
 export function phaseOf(state){
  if(state?.enemyDown===true)return 3;
  const n=state?.sentinelPhase;
- return Number.isInteger(n)&&n>=0&&n<=3?n:0;
+ // A phase-3 save without enemyDown is inconsistent: permit the final pulse to repair it.
+ return Number.isInteger(n)&&n>=0&&n<=2?n:0;
 }
 export function activeConduit(state){
  const phase=phaseOf(state);

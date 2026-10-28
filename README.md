@@ -69,6 +69,17 @@ In VR, aim a controller ray at a device and trigger it. On desktop, **Restore Ho
 
 **Scope:** Static low-poly 3D rooms, two targeted devices, bounded teleport and portals. There is no active VR monster chase, combat, inventory physics, audio, or full campaign yet. Quest 3 device testing and comfort review are still required.
 
+## Underworld: Sentinel Shield Encounter (v0.7)
+
+The [XR Laboratory](xr.html) now includes the third linked Case 001 gameplay scene. Recover the **Frontier** access code and **Dead Sector** medical countercode, then cross the **Sublevel** gate into **Underworld**. The countercode exposes the Sentinel's three shield conduits.
+
+- **Combat:** Aim your VR controller at three separated, numbered shield targets, disabling them in the ordered sequence **center (2) → left (1) → right (3)**. The current vulnerable node glows gold. Each correct pulse advances one stage; a wrong pulse costs **4 vitals**, without flashing the headset or moving the camera. Pulses have a short input cooldown.
+- **Reward:** With all three conduits disabled, the Sentinel is permanently defeated (`enemyDown=true`). Target the exposed stabilizer core to collect the existing `flags.crystal` clue, which powers the last platform in the 2D Fracture zone.
+- **Persistence:** The intermediate `sentinelPhase` is saved across reloads. Already defeated Sentinels from older 2D saves are considered complete. The 2D Underworld encounter remains playable as before and marks the VR fight completed if defeated there.
+- **Desktop fallback:** The three pulse buttons and Recover Core button let players verify the full sequence without a headset.
+
+**Scope:** This is an aim-based shield combat **encounter prototype**, not a moving enemy, weapon physics, projectile simulation or full VR combat system. There is no forced camera movement, flashes or jumpscares. Quest controller accuracy, comfort and performance must still be verified on real hardware. Save sharing remains local to the same browser/profile; use the portable save export/import to move between devices.
+
 ## Architecture
 
 A dependency-free, static HTML/JavaScript prototype. No third-party runtime, account, tracking, remote resources or server requirement. GitHub Actions runs JavaScript syntax and static smoke tests. A separate workflow deploys the static site to GitHub Pages after merging to main and enabling **Settings → Pages → Source: GitHub Actions**.

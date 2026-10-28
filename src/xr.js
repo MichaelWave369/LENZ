@@ -1,11 +1,12 @@
-// LENZ v0.4 immersive VR bridge: stationary 3D reality gates with shared Case 001 state.
+// LENZ v0.6 immersive VR: two sequential Case 001 clues and shared world progress.
 import {KEY,IDS,NAMES,ROUTES,GATE_CENTERS,currentZone,readXRSave,persistXRTravel,targetGate} from './xr-gates.js';
 import {TERMINAL,raySphere,floorTarget,scanFrontierReport,teleportOffset} from './xr-play.js';
+import {DEAD_BREAKER,DEAD_ARCHIVE,deadPowerOnline,restoreDeadPower,retrieveMedicalArchive} from './xr-dead.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
-const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),label=document.getElementById('zone');
+const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
 let zone=currentZone(readXRSave(localStorage)),session=null,referenceSpace=null,program,loc={},cubeBuffer;
-let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,lastXRInput=null;
+let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null;
 function updateLabel(){
  label.textContent='EXPERIENCE: '+NAMES[zone];
  const routes=ROUTES[zone];
@@ -15,6 +16,10 @@ function updateLabel(){
  const flags=save.flags&&typeof save.flags==='object'?save.flags:{};
  scanButton.disabled=zone!=='frontier'||flags.report===true;
  scanButton.textContent=flags.report===true?'FRONTIER REPORT RECOVERED':'SCAN FRONTIER TERMINAL';
+ powerButton.disabled=zone!=='dead'||deadPowerOnline(save);
+ archiveButton.disabled=zone!=='dead'||flags.record===true;
+ powerButton.textContent=deadPowerOnline(save)?'HOSPITAL POWER ONLINE':'RESTORE HOSPITAL POWER';
+ archiveButton.textContent=flags.record===true?'MEDICAL FILE RECOVERED':'READ MEDICAL ARCHIVE';
  const found=['report','record','crystal','platform'].filter(k=>flags[k]===true).length;
  document.getElementById('caseState').textContent='SHARDS '+found+'/4 · '+(flags.vault===true?'CASE 001 COMPLETE':'CORPORATE VAULT SEALED')+' · '+(save.portalCount||0)+' GATE CROSSINGS';
  document.getElementById('xrJournal').textContent=(save.portalLog||[]).slice(-5).reverse().join(' · ')||'NO THRESHOLDS RECORDED';
@@ -30,18 +35,31 @@ function scanTerminal(){
  }catch(err){status.textContent='EVIDENCE ERROR // '+String(err?.message||err).slice(0,100);return false}
 }
 scanButton.addEventListener('click',scanTerminal);
+function changeDeadState(operation){
+ try{
+  const saved={...readXRSave(localStorage),zone};
+  const result=operation(saved);
+  if(result.changed)localStorage.setItem(KEY,JSON.stringify(result.state));
+  updateLabel();status.textContent=result.reason;
+  return result.changed;
+ }catch(err){status.textContent='ARCHIVE ERROR // '+String(err?.message||err).slice(0,100);return false}
+}
+function restorePower(){return changeDeadState(restoreDeadPower)}
+function readArchive(){return changeDeadState(retrieveMedicalArchive)}
+powerButton.addEventListener('click',restorePower);
+archiveButton.addEventListener('click',readArchive);
 function traverse(index){
  try{
   const state=persistXRTravel(localStorage,zone,index);
   if(!state)return false;
-  zone=currentZone(state);highlightedGate=-1;updateLabel();
+  zone=currentZone(state);highlightedGate=-1;deadTarget=null;updateLabel();
   return true;
  }catch(err){
   status.textContent='SAVE ERROR // '+String(err?.message||err).slice(0,120);return false;
  }
 }
 function changeZone(event){
- // Target precedence: portal > Frontier clue > floor teleport.
+ // Target precedence: portal > evidence devices > floor teleport.
  // No trigger does anything unless the controller ray actually hits a target.
  if(!event||!referenceSpace)return false;
  const frame=event.frame,space=event.inputSource?.targetRaySpace;
@@ -51,9 +69,13 @@ function changeZone(event){
  const which=targetGate(origin,orientation);
  if(which>=0)return traverse(which);
  if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null)return scanTerminal();
+ if(zone==='dead'){
+  if(raySphere(origin,orientation,DEAD_BREAKER)!==null)return restorePower();
+  if(raySphere(origin,orientation,DEAD_ARCHIVE)!==null)return readArchive();
+ }
  const floor=floorTarget(origin,orientation);
  if(floor)return teleportTo(floor,frame);
- status.textContent='AIM AT A GATE, THE FRONTIER TERMINAL, OR THE FLOOR';
+ status.textContent='AIM AT A GATE, A ZONE CONSOLE, OR THE FLOOR';
  return false;
 }
 function teleportTo(target,frame){
@@ -66,7 +88,7 @@ function teleportTo(target,frame){
  }
  try{
   referenceSpace=referenceSpace.getOffsetReferenceSpace(new XRRigidTransform(delta));
-  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;
+  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;
   status.textContent='TELEPORT COMPLETE // AIM AT GATE, TERMINAL OR FLOOR';
   return true;
  }catch(err){status.textContent='TELEPORT FAILED // '+String(err?.message||err).slice(0,90);return false}
@@ -156,6 +178,16 @@ function scene(){
    box(i%2?1.75:-1.75,1.5,z,.08,.3,.25,C.red);
   }
   box(0,.85,-6, .72,1.7,.8,C.red);box(0,1.75,-6,.6,.18,.8,C.hot);
+  // Sequential story devices, deliberately separated for controller targeting:
+  // right: emergency breaker; left: sealed medical archive.
+  const save=readXRSave(localStorage);
+  const powered=deadPowerOnline(save);
+  box(DEAD_BREAKER.x,DEAD_BREAKER.y,DEAD_BREAKER.z,.65,.58,.25,deadTarget==='breaker'?C.pale:powered?C.green:C.red);
+  box(DEAD_BREAKER.x,1.64,DEAD_BREAKER.z,.1,.37,.11,powered?C.green:C.gold);
+  drawDigit(DEAD_BREAKER.x,1.89,DEAD_BREAKER.z+.14,1,C.pale);
+  box(DEAD_ARCHIVE.x,DEAD_ARCHIVE.y,DEAD_ARCHIVE.z,.8,.64,.22,deadTarget==='archive'?C.pale:powered?C.ice:C.red);
+  box(DEAD_ARCHIVE.x,1.75,DEAD_ARCHIVE.z,.58,.09,.3,powered?C.green:C.hot);
+  drawDigit(DEAD_ARCHIVE.x,2.03,DEAD_ARCHIVE.z+.15,2,C.pale);
  }else if(zone==='underworld'){
   box(0,.67,-6.3,5.3,.27,5.3,C.stone);
   for(let x=0;x<5;x++)for(let z=0;z<5;z++)
@@ -203,7 +235,7 @@ function preview(){
 function immersiveFrame(time,frame){
  if(!session)return;session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
- highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;
+ highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;
  for(const source of session.inputSources||[]){
   const ray=frame.getPose(source.targetRaySpace,referenceSpace);
   if(!ray)continue;
@@ -211,6 +243,8 @@ function immersiveFrame(time,frame){
   highlightedGate=targetGate(origin,orientation);
   if(highlightedGate!==-1)break;
   if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null){terminalHighlighted=true;break}
+  if(zone==='dead'&&raySphere(origin,orientation,DEAD_BREAKER)!==null){deadTarget='breaker';break}
+  if(zone==='dead'&&raySphere(origin,orientation,DEAD_ARCHIVE)!==null){deadTarget='archive';break}
   teleportPreview=floorTarget(origin,orientation);
   if(teleportPreview)break;
  }
@@ -226,7 +260,7 @@ async function enterXR(){
   enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
-   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
+   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
   xr.updateRenderState({baseLayer:new XRWebGLLayer(xr,gl,{alpha:false,depth:true})});
@@ -241,7 +275,7 @@ async function enterXR(){
 enter.addEventListener('click',enterXR);
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
- enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;
+ enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;
 }else{
  try{init();requestAnimationFrame(preview);updateLabel();
   if(navigator.xr){

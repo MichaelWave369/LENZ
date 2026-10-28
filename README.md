@@ -61,6 +61,14 @@ The [XR Laboratory](xr.html) now includes a first **genuine world interaction**.
 
 **Limitations:** Quest 3 comfort, controller hardware, floor hit accuracy and reference-space offsets still need on-device confirmation. The laboratory is still a modest low-poly 3D demonstration, **not** full open-world VR, physical grabbing, combat or a 3D conversion of all Case 001 quests. There is no collision system; never rely on virtual geometry as a real-world safety boundary. Old saves remain compatible. No cloud services or analytics have been added.
 
+## Dead Sector VR medical archive (v0.6)
+
+The XR Laboratory now supports **two sequential Case 001 objectives in different realities**. In Frontier, scan the cyan evidence console to obtain the access code. Then enter **Dead Sector** and interact with the **red hospital breaker (1)** to restore power. Finally target **medical archive (2)** to recover the medical countercode. The record is exactly the existing `flags.record` clue that lets the player defeat the sentinel in the 2D Underworld. All rewards persist in the same local save and cannot be repeatedly farmed.
+
+In VR, aim a controller ray at a device and trigger it. On desktop, **Restore Hospital Power** and **Read Medical Archive** buttons provide equivalents. Locked interactions explain missing prerequisites. An imported legacy save containing a medical record automatically counts as having the power restored, and completing the medical record in the 2D game restores power for the XR presentation too. The breaker is an extra VR interaction, **not** a new fifth shard or a requirement imposed on the existing 2D route.
+
+**Scope:** Static low-poly 3D rooms, two targeted devices, bounded teleport and portals. There is no active VR monster chase, combat, inventory physics, audio, or full campaign yet. Quest 3 device testing and comfort review are still required.
+
 ## Architecture
 
 A dependency-free, static HTML/JavaScript prototype. No third-party runtime, account, tracking, remote resources or server requirement. GitHub Actions runs JavaScript syntax and static smoke tests. A separate workflow deploys the static site to GitHub Pages after merging to main and enabling **Settings → Pages → Source: GitHub Actions**.

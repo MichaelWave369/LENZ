@@ -70,6 +70,19 @@
 - [ ] Real collision, safe movement affordances and player options (snap turn, height)
 - [ ] Additional fully 3D Case 001 puzzles and meaningful enemy encounters
 
+## Milestone 1E: Dead Sector in immersive XR (v0.6)
+
+- [x] Hospital breaker and separate medical archive visible in Dead Sector VR
+- [x] Aim-trigger targeting for both devices; active target receives steady highlight
+- [x] Frontier report required to activate power
+- [x] Power restoration required before extracting medical countercode in XR
+- [x] Shared `record` unlock across desktop game and XR, once-only health reward
+- [x] 2D-compatible `deadPower` field and legacy-save migration
+- [x] Browser fallback buttons and contextual lock explanations
+- [x] Unit tests of state gates, targeting, idempotence and 2D persistence
+- [ ] Physical Quest 3 test, including controller ray alignment and text readability
+- [ ] Stateful VR enemy, combat, collision-safe teleport and immersive audio
+
 ## Milestone 2: Expand immersive play
 
 - Quest 3 WebXR input mappings with hand/controller selection

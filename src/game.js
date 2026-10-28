@@ -62,7 +62,8 @@ function normalizeState(raw){
  const health=Number(raw.health);
  d.health=Number.isFinite(health)?clamp(health,1,100):100;
  const flags=raw.flags&&typeof raw.flags==='object'&&!Array.isArray(raw.flags)?raw.flags:{};
- for(const id of ['report','record','crystal','platform','vault'])if(flags[id]===true)d.flags[id]=true;
+ for(const id of ['report','record','crystal','platform','vault','deadPower'])if(flags[id]===true)d.flags[id]=true;
+ if(d.flags.record===true)d.flags.deadPower=true; // Legacy archives imply restored power.
  const visited=Array.isArray(raw.visited)?raw.visited:[];
  d.visited=IDS.filter(id=>visited.includes(id));if(!d.visited.includes(d.zone))d.visited.push(d.zone);
  d.enemyDown=raw.enemyDown===true;
@@ -159,7 +160,7 @@ function interact(){
   else{s.flags.vault=true;say('DIRECTIVE RECOVERED // SUBJECT IS THE PRODUCT',9);hud();save();}
  }else if(s.zone==='dead'&&dist(a,{x:887,y:204})<105){
   if(!has('report'))say('ACCESS DENIED // CODE STORED IN FRONTIER ANOMALY REPORT',4);
-  else gain('record','COUNTERCODE FOUND // THE UNDERWORLD SENTINEL IS VULNERABLE');
+  else{ s.flags.deadPower=true;gain('record','COUNTERCODE FOUND // THE UNDERWORLD SENTINEL IS VULNERABLE'); }
  }else if(s.zone==='underworld'&&dist(a,{x:8,y:6})<2.2){
   if(!s.enemyDown)say('CORE SHIELDED // DEFEAT THE SENTINEL FIRST',3);
   else gain('crystal','CORE RECOVERED // THE FRACTURE BRIDGE NOW EXISTS');

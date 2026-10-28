@@ -1,4 +1,4 @@
-# LENZ — Game Bible (living v0.8)
+# LENZ — Game Bible (living v0.9)
 
 > **One world. Infinite perspectives.**
 
@@ -103,6 +103,18 @@ After the Sentinel encounter, the recovered **stabilizer core** powers three dif
 Legacy state is preserved: a previously recovered 2D Fracture shard implies the VR repair was already completed. A player who collects coordinates in the original 2D platformer automatically marks all XR anchors complete. This is deliberately non-destructive across genres.
 
 The VR presentation is currently a **stationary, aim-based puzzle** in a low-poly abstract Fracture environment, with bounded floor teleport and no physical jumps or automatic camera motion. It is not a claim that the full 2D platformer has been converted to a 3D platforming experience. The **Frontier vault ending is still only interactive in the 2D scene** at this stage.
+
+## L.E.N.Z. Corporate Vault Revelation (v0.9)
+
+Case 001 has a complete **prototype-level XR narrative arc**. Frontier now contains a visibly separated two-step security finale: the cipher decoder verifies the four recovered Experience Zone clues; the physical vault door then unveils the corporation's directive:
+
+> **THE SUBJECT IS THE PRODUCT**
+
+The message appears **in the 3D scene** using an original, static, bitmap-glyph WebGL mesh, rather than relying on a desktop-only status line. There are no remote fonts, textures, sign-ins or external assets required.
+
+The first successful decode persists `flags.vaultAccess`; opening the door sets `flags.vault`, the same Case 001 ending bit used by the 2D browser prototype. Legacy completed saves imply bypassed security so players never need to replay the finale. Save exports retain the state.
+
+**Important scope boundary:** This is an immersive **puzzle-completion experience**, not a first-person fully physical VR game or finished campaign. Quest 3 controller, comfort, accessibility and on-device rendering still need real playtesting; the story is deliberately open to future chapters.
 
 ## First prototype's scope (v0.1)
 

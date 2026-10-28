@@ -20,7 +20,7 @@ button.active-node{border-color:#ffc578;background:#524225;color:#fff2d8}
 @media(max-width:670px){.grid{grid-template-columns:1fr}}
 </style></head><body>
 <div class="wrap">
-<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.8 // Four connected realities and the Fracture vault coordinates</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
+<header><div><div class="micro">L.E.N.Z. // EXPERIMENTAL REALITY DIVISION</div><h1>LENZ<span style="color:#73e8e9">.</span></h1><p>VR laboratory v0.9 // Case 001 complete across four immersive realities</p></div><a class="link" href="index.html">← BACK TO THE GAME</a></header>
 <section class="frame">
  <div class="frame-head"><span id="zone">EXPERIENCE: FRONTIER</span><span>WEBXR IMMERSIVE-VR EXPERIMENT</span></div>
  <canvas id="scene" width="960" height="540" aria-label="3D LENZ world preview with two distinctly numbered portal gates. Their destinations and site names are shown directly below."></canvas>
@@ -39,10 +39,17 @@ button.active-node{border-color:#ffc578;background:#524225;color:#fff2d8}
   <button id="fractureAnchor1">ANCHOR CENTER / 2</button>
   <button id="fractureAnchor2">ANCHOR RIGHT / 3</button>
   <button id="fractureCoordinates">EXTRACT VAULT COORDINATES</button>
+  <button id="vaultDecode">DECODE CORPORATE VAULT</button>
+  <button id="vaultOpen">OPEN CORPORATE VAULT</button>
   <a class="link" href="index.html">PLAY DESKTOP PROTOTYPE</a>
  </div>
 </section>
 <div id="status" role="status" aria-live="polite">INITIALIZING GRAPHICS</div>
+<div class="case" aria-labelledby="vaultTitle">
+ <b class="micro" id="vaultTitle">CASE 001 // FRONTIER CORPORATE VAULT</b>
+ <p id="vaultStatus" role="status" aria-live="polite">LOADING VAULT SECURITY STATUS</p>
+ <p>After finding the four clues, return to <b>Frontier</b>. Aim at the separate <b>cipher decoder (1)</b>, then the <b>sealed vault door (2)</b>. Opening the vault completes Case 001 and displays the corporate directive in the headset: <b>THE SUBJECT IS THE PRODUCT</b>.</p>
+</div>
 <div class="case" aria-labelledby="fractureTitle">
  <b class="micro" id="fractureTitle">THE FRACTURE // REALITY STABILITY GRID</b>
  <p id="fractureStatus" role="status" aria-live="polite">LOADING FRACTURE STATUS</p>
@@ -56,12 +63,12 @@ button.active-node{border-color:#ffc578;background:#524225;color:#fff2d8}
 <div class="case">
  <b id="caseState" class="micro">LOADING CASE 001</b>
  <p id="xrJournal" aria-live="polite">LOADING PORTAL JOURNAL</p>
- <p>CASE 001 now connects <b>all four XR realities</b>: Frontier access code → Dead Sector medical file → Underworld stabilizer core → Fracture bridge repair → vault coordinates. Those coordinates unlock Frontier's sealed vault in the browser campaign. Progress persists within this browser profile.</p>
+ <p>CASE 001 is now finishable in the same XR session: Frontier access code → Dead Sector medical file → Underworld Sentinel and core → Fracture stability grid and coordinates → return to Frontier, decode the vault and uncover the corporation's final directive. Progress persists within this browser profile.</p>
 </div>
 <div class="grid">
 <div class="tile"><b>HEADSET REQUIREMENTS</b><p>Use a compatible HTTPS headset browser, such as Quest Browser, and allow immersive VR. The desktop WebGL preview can traverse portals and scan the Frontier terminal using page buttons, but cannot simulate headset teleport targeting.</p></div>
-<div class="tile"><b>VR INTERACTION</b><p>Aim and press trigger to operate the highlighted object. In Underworld, disable the Sentinel's three shield conduits. In The Fracture, repair the <b>left, right, center</b> anchors, then extract vault coordinates from the central decoder. Buttons offer desktop testing without controllers.</p></div>
-<div class="tile"><b>COMFORT & SCOPE</b><p>No forced jumping, moving platforms, projectile flashes or artificial camera rotations. Aim at the floor for bounded teleport. The Fracture is a stationary stabilization puzzle, not VR platforming yet. Stay within your real play boundary; physical collisions and the complete campaign remain unimplemented.</p></div>
+<div class="tile"><b>VR INTERACTION</b><p>Aim and press trigger to interact with a portal, scanner, breaker, combat conduit, stability anchor, vault decoder or vault door. In Frontier the vault is a separate structure farther down the simulated corridor. Aimed objects highlight. All puzzle steps also have desktop buttons for testing.</p></div>
+<div class="tile"><b>COMFORT & SCOPE</b><p>No forced jumping, animated enemy attacks, flashing or artificial camera rotation. Aim at the floor for bounded teleport. The complete <i>prototype</i> Case 001 clue chain and ending are implemented; this is not a full VR game with collision, free roaming, physics combat, or platforming. Stay inside your physical play boundary. Actual Quest 3 validation is still needed.</p></div>
 </div>
 </div>
 <script type="module" src="src/xr.js"></script>

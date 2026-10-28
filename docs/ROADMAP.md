@@ -110,6 +110,22 @@
 - [ ] Physically playtest on Quest 3 and measure controller ray reliability
 - [ ] Optional VR platforming traversal with guardrails and accessibility comfort choices
 
+## Milestone 1H: Frontier corporate vault ending in immersive XR (v0.9)
+
+- [x] In-world cipher decoder and separate vault door in Frontier
+- [x] All four original Case 001 shards required to decode corporate security
+- [x] Saved `vaultAccess` intermediate state and original `vault` ending flag
+- [x] Original 3D WebGL glyph reveal in-headset: THE SUBJECT IS THE PRODUCT
+- [x] Desktop fallback, meaningful lock feedback and no duplicate rewards
+- [x] Existing 2D endings and local save import/export remain compatible
+- [x] Unit tests for clues, save round-trip, hit rays, ending text and prior progression
+- [ ] End-to-end Quest 3 playthrough: start Frontier → finish Frontier in one session
+- [ ] Validate in-headset typography size at various headset heights
+- [ ] Implement physical environmental interactions beyond simple ray puzzle targets
+- [ ] General QA pass for live 3D continuity, audio, player onboarding and comfort
+
+**Milestone gate:** A first-time tester can finish Case 001 inside the headset while understanding both the genre transitions and the final directive. Automated CI tests alone cannot establish this.
+
 ## Milestone 2: Expand immersive play
 
 - Quest 3 WebXR input mappings with hand/controller selection

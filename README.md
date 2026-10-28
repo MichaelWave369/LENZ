@@ -91,6 +91,21 @@ Case 001 now traverses all **four XR Experience Zones**. Recover the stabilizer 
 
 **The final corporate vault remains a 2D Frontier objective**, not yet a 3D XR encounter. A future release should make that ending available inside the headset too.
 
+## Case 001: Corporate Vault Finale in XR (v0.9)
+
+**The entire Case 001 prototype storyline can now be completed in one immersive VR session**, subject to compatible browser/headset support:
+
+1. Scan the Frontier anomaly terminal to obtain the access code.
+2. In Dead Sector, restore hospital power and retrieve the medical countercode.
+3. Defeat Underworld's three-shield Sentinel and recover the stabilizer.
+4. Repair the three reality anchors in The Fracture and extract the vault coordinates.
+5. Return to Frontier. Aim at the **Corporate Cipher Decoder (1)**. It accepts the four distinct Case 001 clues, unsealing the vault.
+6. Aim at the **Corporate Vault Door (2)** to complete the case. An original, world-space, low-poly glyph display reveals **"THE SUBJECT IS THE PRODUCT"** inside the headset.
+
+The XR finale uses the original `flags.vault` completion state from the browser game. The intermediary `flags.vaultAccess` cipher state is locally persisted, including across versioned JSON exports/imports. Legacy 2D completions imply the decoder was already bypassed. Desktop buttons provide equivalents for both final actions, and the original 2D vault remains fully functional.
+
+**Scope honesty:** This finishes the **first experimental case**, not a full VR adventure, open world, or commercial-quality campaign. It is an aim-and-trigger narrative interaction on static low-poly geometry, without free-roaming enemies, collisions, physical weapons or genuine VR platform jumping. The 3D ending sign is built into WebGL without external font downloads. VR text legibility, rendering performance, portal targeting and controller behavior still require actual Quest 3 playtesting. Saves sync automatically only within the same browser origin/profile; transfer between devices using Export/Import.
+
 ## Architecture
 
 A dependency-free, static HTML/JavaScript prototype. No third-party runtime, account, tracking, remote resources or server requirement. GitHub Actions runs JavaScript syntax and static smoke tests. A separate workflow deploys the static site to GitHub Pages after merging to main and enabling **Settings → Pages → Source: GitHub Actions**.

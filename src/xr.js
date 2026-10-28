@@ -4,11 +4,14 @@ import {TERMINAL,raySphere,floorTarget,scanFrontierReport,teleportOffset} from '
 import {DEAD_BREAKER,DEAD_ARCHIVE,deadPowerOnline,restoreDeadPower,retrieveMedicalArchive} from './xr-dead.js';
 import {CONDUITS,CORE,PULSE_ORDER,phaseOf,activeConduit,pulseConduit,recoverDungeonCore} from './xr-underworld.js';
 import {ANCHORS,COORDINATES,STABILIZATION_ORDER,fracturePhase,activeAnchor,stabilizeAnchor,collectVaultCoordinates} from './xr-fracture.js';
+import {VAULT_DECODER,VAULT_DOOR,DIRECTIVE,clueCount,vaultUnlocked,decodeVault,openVault} from './xr-vault.js';
+import {geometryForMessage} from './xr-glyphs.js';
 const canvas=document.getElementById('scene'),status=document.getElementById('status');
-const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),coreButton=document.getElementById('underworldCore'),conduitButtons=[0,1,2].map(i=>document.getElementById('sentinelNode'+i)),anchorButtons=[0,1,2].map(i=>document.getElementById('fractureAnchor'+i)),coordinatesButton=document.getElementById('fractureCoordinates'),label=document.getElementById('zone');
+const enter=document.getElementById('enter'),leftButton=document.getElementById('leftGate'),rightButton=document.getElementById('rightGate'),scanButton=document.getElementById('scanTerminal'),powerButton=document.getElementById('deadPower'),archiveButton=document.getElementById('deadArchive'),coreButton=document.getElementById('underworldCore'),conduitButtons=[0,1,2].map(i=>document.getElementById('sentinelNode'+i)),anchorButtons=[0,1,2].map(i=>document.getElementById('fractureAnchor'+i)),coordinatesButton=document.getElementById('fractureCoordinates'),decoderButton=document.getElementById('vaultDecode'),vaultButton=document.getElementById('vaultOpen'),label=document.getElementById('zone');
 const gl=canvas.getContext('webgl',{alpha:false,antialias:true,xrCompatible:true});
+let messageProgram=null,messageBuffer=null,messageVertexCount=0,messageUniforms={};
 let zone=currentZone(readXRSave(localStorage)),session=null,referenceSpace=null,program,loc={},cubeBuffer;
-let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null,sentinelTarget=-1,coreTarget=false,fractureTarget=-1,coordinatesTarget=false,lastPulseMs=-Infinity,lastAnchorMs=-Infinity;
+let highlightedGate=-1,teleportPreview=null,terminalHighlighted=false,deadTarget=null,sentinelTarget=-1,coreTarget=false,fractureTarget=-1,coordinatesTarget=false,vaultTarget=null,lastPulseMs=-Infinity,lastAnchorMs=-Infinity;
 function updateLabel(){
  label.textContent='EXPERIENCE: '+NAMES[zone];
  const routes=ROUTES[zone];
@@ -47,6 +50,14 @@ function updateLabel(){
   save.enemyDown===true?'SENTINEL DISABLED // SCAN THE CORE':
   flags.record!==true?'SENTINEL IMMUNE // RECOVER DEAD SECTOR MEDICAL COUNTERCODE':
   'SHIELD PHASE '+stage+'/3 // AIM AT '+['LEFT','CENTER','RIGHT'][active]+' CONDUIT';
+ decoderButton.disabled=zone!=='frontier'||vaultUnlocked(save);
+ vaultButton.disabled=zone!=='frontier'||flags.vault===true;
+ decoderButton.textContent=vaultUnlocked(save)?'FOUR-PART CIPHER DECODED':'DECODE CORPORATE VAULT';
+ vaultButton.textContent=flags.vault===true?'CASE 001 COMPLETE':'OPEN CORPORATE VAULT';
+ document.getElementById('vaultStatus').textContent=zone!=='frontier'?'FINAL DIRECTIVE // RETURN TO FRONTIER':
+  flags.vault===true?'CASE 001 COMPLETE // '+DIRECTIVE:
+  vaultUnlocked(save)?'VAULT UNSEALED // AIM AT THE DOOR':
+  'CORPORATE CIPHER // '+clueCount(save)+'/4 EXPERIENCE ZONE CLUES RECOVERED';
  const found=['report','record','crystal','platform'].filter(k=>flags[k]===true).length;
  document.getElementById('caseState').textContent='SHARDS '+found+'/4 · '+(flags.vault===true?'CASE 001 COMPLETE':'CORPORATE VAULT SEALED')+' · '+(save.portalCount||0)+' GATE CROSSINGS';
  document.getElementById('xrJournal').textContent=(save.portalLog||[]).slice(-5).reverse().join(' · ')||'NO THRESHOLDS RECORDED';
@@ -111,11 +122,24 @@ function repairAnchor(index){
 function getCoordinates(){return fractureAction(collectVaultCoordinates)}
 anchorButtons.forEach((b,i)=>b.addEventListener('click',()=>repairAnchor(i)));
 coordinatesButton.addEventListener('click',getCoordinates);
+function vaultAction(operation){
+ try{
+  const state={...readXRSave(localStorage),zone};
+  const result=operation(state);
+  if(result.changed)localStorage.setItem(KEY,JSON.stringify(result.state));
+  updateLabel();status.textContent=result.reason;
+  return result.changed;
+ }catch(err){status.textContent='VAULT ERROR // '+String(err?.message||err).slice(0,110);return false}
+}
+function decodeCorporateVault(){return vaultAction(decodeVault)}
+function openCorporateVault(){return vaultAction(openVault)}
+decoderButton.addEventListener('click',decodeCorporateVault);
+vaultButton.addEventListener('click',openCorporateVault);
 function traverse(index){
  try{
   const state=persistXRTravel(localStorage,zone,index);
   if(!state)return false;
-  zone=currentZone(state);highlightedGate=-1;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;updateLabel();
+  zone=currentZone(state);highlightedGate=-1;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;vaultTarget=null;updateLabel();
   return true;
  }catch(err){
   status.textContent='SAVE ERROR // '+String(err?.message||err).slice(0,120);return false;
@@ -131,7 +155,11 @@ function changeZone(event){
  const origin=pose.transform.position,orientation=pose.transform.orientation;
  const which=targetGate(origin,orientation);
  if(which>=0)return traverse(which);
- if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null)return scanTerminal();
+ if(zone==='frontier'){
+  if(raySphere(origin,orientation,VAULT_DECODER)!==null)return decodeCorporateVault();
+  if(raySphere(origin,orientation,VAULT_DOOR)!==null)return openCorporateVault();
+  if(raySphere(origin,orientation,TERMINAL)!==null)return scanTerminal();
+ }
  if(zone==='dead'){
   if(raySphere(origin,orientation,DEAD_BREAKER)!==null)return restorePower();
   if(raySphere(origin,orientation,DEAD_ARCHIVE)!==null)return readArchive();
@@ -162,7 +190,7 @@ function teleportTo(target,frame){
  }
  try{
   referenceSpace=referenceSpace.getOffsetReferenceSpace(new XRRigidTransform(delta));
-  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;
+  teleportPreview=null;highlightedGate=-1;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;vaultTarget=null;
   status.textContent='TELEPORT COMPLETE // AIM AT GATE, TERMINAL OR FLOOR';
   return true;
  }catch(err){status.textContent='TELEPORT FAILED // '+String(err?.message||err).slice(0,90);return false}
@@ -194,6 +222,17 @@ function init(){
  for(const [name,off] of [['aPos',0],['aNormal',12]]){
   const at=gl.getAttribLocation(program,name);gl.enableVertexAttribArray(at);gl.vertexAttribPointer(at,3,gl.FLOAT,false,24,off);
  }
+ // Render the canonical corporate directive inside the headset, not just on the HTML page.
+ // The original 5x7 letter geometry is static and drawn with one call per eye.
+ const textVertices=geometryForMessage(undefined,{pixel:.045,topY:2.61,z:-4.72,lineGap:.17});
+ messageBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,messageBuffer);
+ gl.bufferData(gl.ARRAY_BUFFER,textVertices,gl.STATIC_DRAW);messageVertexCount=textVertices.length/3;
+ const tv=compile(gl.VERTEX_SHADER,'attribute vec3 aGlyph;uniform mat4 uP;uniform mat4 uV;void main(){gl_Position=uP*uV*vec4(aGlyph,1.0);}');
+ const tf=compile(gl.FRAGMENT_SHADER,'precision mediump float;uniform vec3 uColor;void main(){gl_FragColor=vec4(uColor,1.0);}');
+ messageProgram=gl.createProgram();gl.attachShader(messageProgram,tv);gl.attachShader(messageProgram,tf);gl.linkProgram(messageProgram);
+ if(!gl.getProgramParameter(messageProgram,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(messageProgram));
+ messageUniforms={p:gl.getUniformLocation(messageProgram,'uP'),v:gl.getUniformLocation(messageProgram,'uV'),color:gl.getUniformLocation(messageProgram,'uColor'),pos:gl.getAttribLocation(messageProgram,'aGlyph')};
+ gl.bindBuffer(gl.ARRAY_BUFFER,cubeBuffer);
  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
 }
 function box(x,y,z,sx,sy,sz,color){
@@ -244,6 +283,20 @@ function scene(){
   // An interactable scan console, placed between the two portal openings.
   box(0,1.13,-5.06,.68,.45,.14,terminalHighlighted?C.pale:C.ice);
   box(0,1.53,-5.04,.46,.06,.15,C.gold);
+  // Farther into Frontier: a cipher pedestal and sealed corporate vault.
+  const saved=readXRSave(localStorage),finished=saved.flags?.vault===true;
+  const decrypted=vaultUnlocked(saved);
+  box(VAULT_DECODER.x,.65,VAULT_DECODER.z,.70,1.30,.64,C.stone);
+  box(VAULT_DECODER.x,VAULT_DECODER.y,VAULT_DECODER.z+.35,.64,.50,.16,
+   vaultTarget==='decoder'?C.pale:decrypted?C.green:C.gold);
+  drawDigit(VAULT_DECODER.x,1.87,VAULT_DECODER.z+.31,1,C.pale);
+  box(VAULT_DOOR.x,1.35,VAULT_DOOR.z,1.58,2.65,.30,
+   finished?C.green:decrypted?C.blue:C.dark);
+  box(VAULT_DOOR.x,2.76,VAULT_DOOR.z+.13,1.78,.12,.42,C.stone);
+  box(VAULT_DOOR.x,VAULT_DOOR.y,VAULT_DOOR.z+.18,.50,.50,.13,
+   vaultTarget==='door'?C.pale:finished?C.green:decrypted?C.ice:C.red);
+  drawDigit(VAULT_DOOR.x,3.05,VAULT_DOOR.z+.23,2,C.pale);
+  if(finished)box(0,1.94,-4.81,3.30,1.88,.14,C.dark);
  }else if(zone==='dead'){
   for(let i=0;i<5;i++){
    const z=-5.1-i*1.75;
@@ -309,6 +362,25 @@ function scene(){
 }
 function render(projection,view){
  gl.useProgram(program);gl.uniformMatrix4fv(loc.uP,false,projection);gl.uniformMatrix4fv(loc.uV,false,view);scene();
+ if(zone==='frontier'&&readXRSave(localStorage).flags?.vault===true)drawDirective(projection,view);
+}
+function drawDirective(projection,view){
+ if(!messageProgram||!messageBuffer||!messageVertexCount)return;
+ gl.useProgram(messageProgram);
+ gl.uniformMatrix4fv(messageUniforms.p,false,projection);
+ gl.uniformMatrix4fv(messageUniforms.v,false,view);
+ gl.uniform3fv(messageUniforms.color,[.48,.98,.91]);
+ gl.bindBuffer(gl.ARRAY_BUFFER,messageBuffer);
+ gl.enableVertexAttribArray(messageUniforms.pos);
+ gl.vertexAttribPointer(messageUniforms.pos,3,gl.FLOAT,false,12,0);
+ gl.drawArrays(gl.TRIANGLES,0,messageVertexCount);
+ // Restore the original cube layout for the next eye/frame.
+ gl.bindBuffer(gl.ARRAY_BUFFER,cubeBuffer);
+ for(const [name,offset] of [['aPos',0],['aNormal',12]]){
+  const attrib=gl.getAttribLocation(program,name);
+  gl.enableVertexAttribArray(attrib);gl.vertexAttribPointer(attrib,3,gl.FLOAT,false,24,offset);
+ }
+ gl.useProgram(program);
 }
 function perspective(fov,aspect,near,far){
  const f=1/Math.tan(fov/2),r=1/(near-far);
@@ -334,14 +406,18 @@ function preview(){
 function immersiveFrame(time,frame){
  if(!session)return;session.requestAnimationFrame(immersiveFrame);
  const pose=frame.getViewerPose(referenceSpace);if(!pose)return;
- highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;
+ highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;vaultTarget=null;
  for(const source of session.inputSources||[]){
   const ray=frame.getPose(source.targetRaySpace,referenceSpace);
   if(!ray)continue;
   const origin=ray.transform.position,orientation=ray.transform.orientation;
   highlightedGate=targetGate(origin,orientation);
   if(highlightedGate!==-1)break;
-  if(zone==='frontier'&&raySphere(origin,orientation,TERMINAL)!==null){terminalHighlighted=true;break}
+  if(zone==='frontier'){
+   if(raySphere(origin,orientation,VAULT_DECODER)!==null){vaultTarget='decoder';break}
+   if(raySphere(origin,orientation,VAULT_DOOR)!==null){vaultTarget='door';break}
+   if(raySphere(origin,orientation,TERMINAL)!==null){terminalHighlighted=true;break}
+  }
   if(zone==='dead'&&raySphere(origin,orientation,DEAD_BREAKER)!==null){deadTarget='breaker';break}
   if(zone==='dead'&&raySphere(origin,orientation,DEAD_ARCHIVE)!==null){deadTarget='archive';break}
   if(zone==='underworld'){
@@ -369,7 +445,7 @@ async function enterXR(){
   enter.disabled=true;const xr=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']});
   session=xr;session.addEventListener('select',changeZone);
   session.addEventListener('end',()=>{
-   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
+   session=null;referenceSpace=null;highlightedGate=-1;teleportPreview=null;terminalHighlighted=false;deadTarget=null;sentinelTarget=-1;coreTarget=false;fractureTarget=-1;coordinatesTarget=false;vaultTarget=null;enter.disabled=false;enter.textContent='ENTER IMMERSIVE VR';updateLabel();requestAnimationFrame(preview);
   });
   await gl.makeXRCompatible?.();
   xr.updateRenderState({baseLayer:new XRWebGLLayer(xr,gl,{alpha:false,depth:true})});
@@ -384,7 +460,7 @@ async function enterXR(){
 enter.addEventListener('click',enterXR);
 if(!gl){
  status.textContent='WEBGL UNAVAILABLE: TRY A BROWSER WITH WEBGL ENABLED';
- enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;coreButton.disabled=true;conduitButtons.forEach(b=>b.disabled=true);coordinatesButton.disabled=true;anchorButtons.forEach(b=>b.disabled=true);
+ enter.textContent='WEBGL REQUIRED';leftButton.disabled=true;rightButton.disabled=true;scanButton.disabled=true;powerButton.disabled=true;archiveButton.disabled=true;coreButton.disabled=true;conduitButtons.forEach(b=>b.disabled=true);coordinatesButton.disabled=true;anchorButtons.forEach(b=>b.disabled=true);decoderButton.disabled=true;vaultButton.disabled=true;
 }else{
  try{init();requestAnimationFrame(preview);updateLabel();
   if(navigator.xr){

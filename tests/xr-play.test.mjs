@@ -56,7 +56,7 @@ test('full health scan is capped, while corrupt health is normalized',()=>{
 });
 test('XR script contains all three controller ray actions with portal precedence',()=>{
  const gate=xrSource.indexOf('const which=targetGate(origin,orientation)');
- const terminal=xrSource.indexOf("zone==='frontier'&&raySphere(origin,orientation,TERMINAL)");
+ const terminal=xrSource.indexOf('raySphere(origin,orientation,TERMINAL)',gate);
  const floor=xrSource.indexOf('const floor=floorTarget(origin,orientation)');
  assert.ok(gate>0&&terminal>gate&&floor>terminal,'gate, clue, teleport precedence required');
  assert.match(xrSource,/referenceSpace=referenceSpace\.getOffsetReferenceSpace/);
